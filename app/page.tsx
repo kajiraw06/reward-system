@@ -13,7 +13,6 @@ let MAX_POINTS = 500000
 
 // Banner images for carousel
 const bannerImages = [
-  { src: '/claim-reward-banner.png', alt: 'Claim Your Reward Today - Time2Claim' },
   { src: '/Time2Claim.png', alt: 'Time2Claim banner' },
   { src: '/iphone17promax.png', alt: 'iPhone 17 Pro Max' },
   { src: '/bmw.png', alt: 'BMW M2 2025' },
