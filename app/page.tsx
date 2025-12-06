@@ -915,7 +915,7 @@ export default function Home() {
             <motion.div 
               className="relative rounded-2xl shadow-2xl p-6 max-w-3xl w-full text-white max-h-[90vh] overflow-y-auto overflow-x-hidden" 
               style={{
-                background: 'linear-gradient(135deg, #0c1929 0%, #122a3a 30%, #0f2030 60%, #0a1520 100%)',
+                background: 'linear-gradient(90deg, #0A1F30 0%, #0B3151 100%)',
               }}
               onClick={(e) => e.stopPropagation()}
               initial={{ scale: 0.9, opacity: 0, y: 30 }}
@@ -923,13 +923,6 @@ export default function Home() {
               exit={{ scale: 0.9, opacity: 0, y: 30 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
             >
-              {/* Subtle light gradient overlay */}
-              <div 
-                className="absolute inset-0 rounded-2xl pointer-events-none"
-                style={{
-                  background: 'radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(14, 165, 233, 0.06) 0%, transparent 40%)',
-                }}
-              />
               <button className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold z-10" onClick={() => setSelectedReward(null)}>&times;</button>
               
               {/* First Row - 2 Columns */}
