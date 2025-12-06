@@ -248,9 +248,12 @@ export default function Home() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   return (
-    <div className="min-h-screen text-white flex flex-col overflow-visible relative" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d1f35 25%, #0f2a45 50%, #0a1e35 75%, #061525 100%)' }}>
-      {/* Light gradient overlays */}
-      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 10% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 90% 0%, rgba(56, 189, 248, 0.06) 0%, transparent 40%), radial-gradient(ellipse at 50% 100%, rgba(14, 165, 233, 0.04) 0%, transparent 50%)' }} />
+    <div className="min-h-screen text-white flex flex-col overflow-visible relative">
+      {/* Background Image */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/Rectangle 22.png')" }}
+      />
       {/* Header */}
       <header className="w-full px-4 sm:px-8 py-2 flex items-center justify-between shadow-lg relative z-10" style={{ background: 'linear-gradient(180deg, rgba(13, 31, 53, 0.95) 0%, rgba(10, 22, 40, 0.9) 100%)', borderBottom: '1px solid rgba(30, 58, 77, 0.3)' }}>
         <div className="flex items-center gap-4">
