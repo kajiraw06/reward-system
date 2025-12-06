@@ -1179,7 +1179,7 @@ export default function Home() {
                   <div className="md:col-span-2 flex justify-center mt-4">
                     <motion.button 
                       type="submit" 
-                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-16 py-4 rounded-full font-bold text-base uppercase tracking-wider shadow-lg hover:from-orange-600 hover:to-orange-700 transition"
+                      className="bg-gradient-to-b from-orange-400 to-orange-600 text-white px-20 py-4 rounded-xl font-bold text-lg uppercase tracking-wide shadow-lg hover:from-orange-500 hover:to-orange-700 transition"
                       whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(249, 115, 22, 0.4)" }}
                       whileTap={{ scale: 0.98 }}
                       transition={{ type: "spring", stiffness: 400, damping: 17 }}
