@@ -926,30 +926,30 @@ export default function Home() {
               <button className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold z-10" onClick={() => setSelectedReward(null)}>&times;</button>
               
               {/* First Row - 2 Columns */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Column 1: Image and Gallery */}
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3">
                   {/* Main Display Image */}
-                  <div className="aspect-[658/403] bg-[#2d3a4a] rounded-xl flex items-center justify-center overflow-hidden border border-[#3d4a5a]">
+                  <div className="aspect-[658/403] bg-[#1a2a3a] rounded-lg flex items-center justify-center overflow-hidden">
                     <img 
                       src={
                         (selectedReward as any).galleries && selectedVariant && (selectedReward as any).galleries[selectedVariant]
                           ? (selectedReward as any).galleries[selectedVariant][selectedGalleryImage]
-                          : ((selectedReward as any).image || `https://via.placeholder.com/658x403/2d3a4a/666666?text=${encodeURIComponent(selectedReward.name)}`)
+                          : ((selectedReward as any).image || `https://via.placeholder.com/658x403/1a2a3a/666666?text=${encodeURIComponent(selectedReward.name)}`)
                       }
                       alt={`${selectedReward.name} - ${selectedVariant} - Image ${selectedGalleryImage + 1}`}
                       className="w-full h-full object-contain"
                     />
                   </div>
                   {/* Gallery Thumbnails */}
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-4 gap-2">
                     {[0, 1, 2, 3].map((idx) => (
                       <div 
                         key={idx} 
-                        className={`aspect-[150/100] bg-[#2d3a4a] rounded-lg cursor-pointer transition flex items-center justify-center overflow-hidden border ${
+                        className={`aspect-[150/100] bg-[#1a2a3a] rounded-lg cursor-pointer transition flex items-center justify-center overflow-hidden border ${
                           selectedGalleryImage === idx 
                             ? 'border-white' 
-                            : 'border-[#3d4a5a] hover:border-gray-400'
+                            : 'border-transparent hover:border-gray-500'
                         }`}
                         onClick={() => setSelectedGalleryImage(idx)}
                       >
@@ -957,7 +957,7 @@ export default function Home() {
                           src={
                             (selectedReward as any).galleries && selectedVariant && (selectedReward as any).galleries[selectedVariant]
                               ? (selectedReward as any).galleries[selectedVariant][idx]
-                              : ((selectedReward as any).image || `https://via.placeholder.com/150x100/2d3a4a/666666?text=${idx + 1}`)
+                              : ((selectedReward as any).image || `https://via.placeholder.com/150x100/1a2a3a/666666?text=${idx + 1}`)
                           }
                           alt={`Gallery ${idx + 1}`}
                           className="w-full h-full object-cover"
@@ -968,15 +968,15 @@ export default function Home() {
                 </div>
 
                 {/* Column 2: Reward Details */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1">
                   {/* Reward Name */}
-                  <h2 className="font-bold text-3xl text-white">{selectedReward.name}</h2>
+                  <h2 className="font-bold text-2xl text-white">{selectedReward.name}</h2>
                   
                   {/* Subtitle */}
-                  <p className="text-base text-gray-300">{(selectedReward as any).description || selectedReward.name}</p>
+                  <p className="text-sm text-gray-300">{selectedReward.name}</p>
                   
                   {/* Extra Detail */}
-                  <p className="text-sm text-gray-400 mt-1">Premium quality reward from our exclusive collection. Limited availability.</p>
+                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">Premium quality reward from our exclusive collection.<br/>Limited availability.</p>
                   
                   {/* Variant Options */}
                   {(selectedReward as any).variants && (
@@ -1061,14 +1061,14 @@ export default function Home() {
                   
                   {/* Points */}
                   <div className="flex items-center gap-2 mt-4">
-                    <span className="text-2xl">🪙</span>
-                    <span className="text-2xl font-bold text-orange-400">{selectedReward.points.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="text-2xl">🟢</span>
+                    <span className="text-2xl font-bold text-green-400">{selectedReward.points.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   
                   {/* Claiming Steps */}
-                  <div className="bg-[#1e2d3d] rounded-xl p-4 mt-4 border border-[#2e3d4d]">
-                    <h3 className="font-bold text-sm text-orange-400 mb-3">Claiming Process:</h3>
-                    <ol className="text-sm text-gray-400 space-y-1">
+                  <div className="bg-[#0d1a26] rounded-lg p-4 mt-4">
+                    <h3 className="font-semibold text-sm text-white mb-2">Claiming Process:</h3>
+                    <ol className="text-xs text-gray-400 space-y-0.5">
                       <li>1. Fill out the claim form below.</li>
                       <li>2. Wait for admin approval (24-48 hours).</li>
                       <li>3. Receive confirmation via email/SMS.</li>
@@ -1079,9 +1079,9 @@ export default function Home() {
               </div>
 
               {/* Second Row - Claim Form */}
-              <div className="pt-6">
-                <h3 className="font-bold text-xl text-white mb-5">Complete Your Claim</h3>
-                <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={async (e) => { 
+              <div className="mt-6">
+                <h3 className="font-semibold text-lg text-white mb-4">Complete Your Claim</h3>
+                <form className="grid grid-cols-1 md:grid-cols-2 gap-3" onSubmit={async (e) => { 
                   e.preventDefault(); 
                   
                   const formData = new FormData(e.currentTarget);
@@ -1122,28 +1122,28 @@ export default function Home() {
                     type="text" 
                     name="username"
                     placeholder="Username" 
-                    className="border border-[#2e3d4d] rounded-xl px-4 py-3.5 bg-[#1e2d3d] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
+                    className="border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                     required 
                   />
                   <input 
                     type="text" 
                     name="fullName"
                     placeholder="Full Name" 
-                    className="border border-[#2e3d4d] rounded-xl px-4 py-3.5 bg-[#1e2d3d] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
+                    className="border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                     required 
                   />
                   <input 
                     type="tel" 
                     name="phoneNumber"
                     placeholder="Phone Number" 
-                    className="border border-[#2e3d4d] rounded-xl px-4 py-3.5 bg-[#1e2d3d] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
+                    className="border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                     required 
                   />
                   <input 
                     type="email" 
                     name="email"
                     placeholder="Email Address" 
-                    className="border border-[#2e3d4d] rounded-xl px-4 py-3.5 bg-[#1e2d3d] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
+                    className="border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                     required 
                   />
                   
@@ -1154,14 +1154,14 @@ export default function Home() {
                         type="text" 
                         name="ewalletName"
                         placeholder="E-wallet Name (GCash/Maya)" 
-                        className="border border-[#2e3d4d] rounded-xl px-4 py-3.5 bg-[#1e2d3d] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
+                        className="border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                         required 
                       />
                       <input 
                         type="text" 
                         name="ewalletAccount"
                         placeholder="E-wallet Account Number" 
-                        className="md:col-span-2 border border-[#2e3d4d] rounded-xl px-4 py-3.5 bg-[#1e2d3d] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
+                        className="md:col-span-2 border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                         required 
                       />
                     </>
@@ -1170,7 +1170,7 @@ export default function Home() {
                       type="text"
                       name="deliveryAddress"
                       placeholder="Complete Delivery Address" 
-                      className="md:col-span-2 border border-[#2e3d4d] rounded-xl px-4 py-3.5 bg-[#1e2d3d] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
+                      className="md:col-span-2 border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                       required 
                     />
                   )}
