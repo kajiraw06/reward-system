@@ -352,9 +352,9 @@ export default function Home() {
 
       <div className="flex flex-1 w-full overflow-visible">
         {/* Sidebar - Active Filters (Desktop) */}
-        <aside className="hidden md:flex flex-col w-72 bg-gray-800 rounded-xl mx-8 my-0 p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-yellow-400">Active Filters</h3>
+        <aside className="hidden md:flex flex-col w-72 rounded-xl mx-8 my-0 p-6 shadow-lg border border-[#1e3a4d]/50" style={{ background: 'linear-gradient(180deg, #0d1f2d 0%, #0a1a28 50%, #071420 100%)' }}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-white">Active Filters</h3>
             {activeFilterCount > 0 && (
               <button 
                 onClick={clearAllFilters}
@@ -366,14 +366,26 @@ export default function Home() {
           </div>
           
           {/* Points Range Slider */}
-          <div className="mb-6">
-            <h4 className="text-sm font-semibold text-gray-300 mb-3">💰 Points Range</h4>
+          <div className="mb-8 bg-[#0a1822]/60 rounded-xl p-4 border border-[#1e3a4d]/30">
+            <h4 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="text-yellow-400">🪙</span> Points Range
+            </h4>
             <div className="space-y-3">
               <div className="flex justify-between text-xs text-gray-400">
                 <span>{pointsRange[0].toLocaleString()}</span>
                 <span>{pointsRange[1].toLocaleString()}</span>
               </div>
-              <div className="relative">
+              <div className="relative h-2">
+                {/* Track background */}
+                <div className="absolute inset-0 bg-[#1a2d3d] rounded-full"></div>
+                {/* Active track */}
+                <div 
+                  className="absolute h-full bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-full"
+                  style={{
+                    left: `${((pointsRange[0] - MIN_POINTS) / (MAX_POINTS - MIN_POINTS)) * 100}%`,
+                    right: `${100 - ((pointsRange[1] - MIN_POINTS) / (MAX_POINTS - MIN_POINTS)) * 100}%`
+                  }}
+                ></div>
                 <input
                   type="range"
                   min={MIN_POINTS}
@@ -386,7 +398,8 @@ export default function Home() {
                       setCurrentPage(1)
                     }
                   }}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                  className="absolute w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-yellow-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-yellow-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-yellow-500 [&::-moz-range-thumb]:cursor-pointer"
+                  style={{ zIndex: 2 }}
                 />
                 <input
                   type="range"
@@ -400,10 +413,11 @@ export default function Home() {
                       setCurrentPage(1)
                     }
                   }}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500 mt-2"
+                  className="absolute w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-cyan-300 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-cyan-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-cyan-300 [&::-moz-range-thumb]:cursor-pointer"
+                  style={{ zIndex: 3 }}
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-4">
                 <input
                   type="number"
                   value={pointsRange[0]}
@@ -414,7 +428,7 @@ export default function Home() {
                       setCurrentPage(1)
                     }
                   }}
-                  className="w-1/2 px-2 py-1 text-xs bg-gray-900 border border-gray-700 rounded text-white"
+                  className="w-1/2 px-3 py-2 text-sm bg-[#0a1822] border border-[#1e3a4d] rounded-lg text-white text-center focus:outline-none focus:border-yellow-500"
                   placeholder="Min"
                 />
                 <input
@@ -427,7 +441,7 @@ export default function Home() {
                       setCurrentPage(1)
                     }
                   }}
-                  className="w-1/2 px-2 py-1 text-xs bg-gray-900 border border-gray-700 rounded text-white"
+                  className="w-1/2 px-3 py-2 text-sm bg-[#0a1822] border border-[#1e3a4d] rounded-lg text-white text-center focus:outline-none focus:border-yellow-500"
                   placeholder="Max"
                 />
               </div>
@@ -435,18 +449,25 @@ export default function Home() {
           </div>
 
           {/* Category Filter */}
-          <div className="mb-5">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Category</h4>
+          <div className="mb-6">
+            <h4 className="text-sm font-medium text-gray-400 mb-4">Category</h4>
             <div className="space-y-1">
               {categories.map(cat => (
-                <label key={cat} className={`flex items-center gap-3 cursor-pointer px-3 py-2 rounded-lg transition-all ${categoryFilter.includes(cat) ? 'bg-yellow-500/10 border border-yellow-500/30' : 'hover:bg-gray-700/50'}`}>
+                <label key={cat} className="flex items-center gap-3 cursor-pointer py-2 transition-all hover:text-white">
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${categoryFilter.includes(cat) ? 'bg-yellow-500 border-yellow-500' : 'bg-[#1a2d3d] border-[#2a4050]'}`}>
+                    {categoryFilter.includes(cat) && (
+                      <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
                   <input
                     type="checkbox"
                     checked={categoryFilter.includes(cat)}
                     onChange={() => toggleCategoryFilter(cat)}
-                    className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-yellow-500 focus:ring-yellow-500 focus:ring-offset-0 cursor-pointer"
+                    className="hidden"
                   />
-                  <span className={`text-sm ${categoryFilter.includes(cat) ? 'text-yellow-400 font-medium' : 'text-gray-300'}`}>
+                  <span className={`text-sm ${categoryFilter.includes(cat) ? 'text-white font-medium' : 'text-gray-400'}`}>
                     {cat}
                   </span>
                 </label>
@@ -456,29 +477,29 @@ export default function Home() {
 
           {/* Prestige Tier Filter */}
           <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Prestige Tier</h4>
+            <h4 className="text-sm font-medium text-gray-400 mb-4">Prestige Tear</h4>
             <div className="space-y-1">
               {tiers.map(tier => (
-                <label key={tier.id} className={`flex items-center gap-3 cursor-pointer px-3 py-2 rounded-lg transition-all ${tierFilter.includes(tier.id) ? 'bg-yellow-500/10 border border-yellow-500/30' : 'hover:bg-gray-700/50'}`}>
+                <label key={tier.id} className="flex items-center gap-3 cursor-pointer py-2 transition-all hover:text-white">
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${tierFilter.includes(tier.id) ? 'bg-yellow-500 border-yellow-500' : 'bg-[#1a2d3d] border-[#2a4050]'}`}>
+                    {tierFilter.includes(tier.id) && (
+                      <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
                   <input
                     type="checkbox"
                     checked={tierFilter.includes(tier.id)}
                     onChange={() => toggleTierFilter(tier.id)}
-                    className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-yellow-500 focus:ring-yellow-500 focus:ring-offset-0 cursor-pointer"
+                    className="hidden"
                   />
-                  <span className={`text-sm ${tierFilter.includes(tier.id) ? 'text-yellow-400 font-medium' : 'text-gray-300'}`}>
+                  <span className={`text-sm ${tierFilter.includes(tier.id) ? 'text-white font-medium' : 'text-gray-400'}`}>
                     {tier.label}
                   </span>
                 </label>
               ))}
             </div>
-          </div>
-
-          {/* Results count */}
-          <div className="mt-auto pt-4 border-t border-gray-700/50">
-            <p className="text-xs text-gray-500 text-center">
-              {sortedRewards.length} of {rewards.length} rewards
-            </p>
           </div>
         </aside>
         {/* Main Content */}
