@@ -542,7 +542,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 w-full max-w-7xl px-1 overflow-visible pt-8">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6 w-full max-w-7xl px-1 overflow-visible pt-8">
           {paginatedRewards.map((item) => {
             const availableStock = item.quantity || 0
             const isLowStock = availableStock <= 10 && availableStock >= 2
@@ -580,12 +580,14 @@ export default function Home() {
               
               <div className="transition-all duration-200 h-full">
               <div 
-                className={`flex flex-col items-center rounded-2xl shadow-2xl border-2 transition-all duration-200 h-full ${tierStyles.className} ${
+                className={`flex flex-col items-center rounded-[10px] shadow-2xl border-2 transition-all duration-200 ${tierStyles.className} ${
                   isLastOne 
                     ? 'border-red-500' 
                     : ''
                 }`} 
                 style={{
+                  width: '295px',
+                  height: '439px',
                   borderColor: isLastOne ? '#ef4444' : tierStyles.borderColor,
                   animation: isLastOne ? 'pulseGlow 1.5s ease-in-out infinite' : tierStyles.animation,
                   ...(isLastOne && {
@@ -593,8 +595,8 @@ export default function Home() {
                   })
                 }}
               >
-              {/* Image - 100% width & height */}
-              <div className={`w-full h-48 rounded-t-xl px-3 py-3 flex items-center justify-center overflow-hidden ${
+              {/* Image - fills most of card */}
+              <div className={`w-full flex-1 rounded-t-[10px] px-3 py-3 flex items-center justify-center overflow-hidden ${
                 tier === 'black-diamond' ? 'bg-transparent' :
                 tier === 'diamond' ? 'bg-transparent' :
                 tier === 'gold' ? 'bg-transparent' :
@@ -602,9 +604,9 @@ export default function Home() {
                 'bg-transparent'
               }`}>
                 <img 
-                  src={(item as any).image || `https://via.placeholder.com/300x200/333333/FFFFFF?text=${encodeURIComponent(item.name)}`}
+                  src={(item as any).image || `https://via.placeholder.com/295x300/333333/FFFFFF?text=${encodeURIComponent(item.name)}`}
                   alt={item.name}
-                  className="w-full h-full object-cover rounded-xl"
+                  className="w-full h-full object-cover rounded-[10px]"
                 />
               </div>
               
@@ -621,12 +623,12 @@ export default function Home() {
               {/* Claim Button */}
               <motion.button
                 type="button"
-                className={`px-6 py-2 rounded-lg font-bold shadow transition w-full mt-auto ${
+                className={`px-6 py-2.5 rounded-lg font-bold shadow transition w-full mt-auto text-sm uppercase tracking-wide ${
                   isOutOfStock
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                     : isLastOne 
                     ? 'bg-red-600 text-white hover:bg-red-700 animate-pulse' 
-                    : tierStyles.buttonBg
+                    : 'bg-gradient-to-b from-[#3b5998] to-[#1e3a6e] text-white hover:from-[#4a6aa8] hover:to-[#2a4a7e] border border-[#5a7ab8]'
                 }`}
                 onClick={() => !isOutOfStock && setSelectedReward(item)}
                 disabled={isOutOfStock}
@@ -634,7 +636,8 @@ export default function Home() {
                 whileTap={!isOutOfStock ? { scale: 0.95 } : {}}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                {isOutOfStock ? 'OUT OF STOCK' : isLastOne ? 'CLAIM NOW!' : 'CLAIM'}
+                {isOutOfStock ? 'OUT OF STOCK' : 'CLAIM NOW'}
+              </motion.button>
               </motion.button>
               </div>
               </div>
