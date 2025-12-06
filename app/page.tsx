@@ -248,9 +248,11 @@ export default function Home() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col overflow-visible">
+    <div className="min-h-screen text-white flex flex-col overflow-visible relative" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d1f35 25%, #0f2a45 50%, #0a1e35 75%, #061525 100%)' }}>
+      {/* Light gradient overlays */}
+      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 10% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 90% 0%, rgba(56, 189, 248, 0.06) 0%, transparent 40%), radial-gradient(ellipse at 50% 100%, rgba(14, 165, 233, 0.04) 0%, transparent 50%)' }} />
       {/* Header */}
-      <header className="w-full bg-gray-800 px-4 sm:px-8 py-2 flex items-center justify-between shadow-lg">
+      <header className="w-full px-4 sm:px-8 py-2 flex items-center justify-between shadow-lg relative z-10" style={{ background: 'linear-gradient(180deg, rgba(13, 31, 53, 0.95) 0%, rgba(10, 22, 40, 0.9) 100%)', borderBottom: '1px solid rgba(30, 58, 77, 0.3)' }}>
         <div className="flex items-center gap-4">
           <img src="/time2bet-logo.svg" alt="Time2Bet Logo" className="w-24 sm:w-[140px]" />
         </div>
@@ -272,7 +274,7 @@ export default function Home() {
         </div>
       </header>
       {/* Banner Carousel - Infinite Left Scroll */}
-      <div className="w-full py-3 sm:py-6 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
+      <div className="w-full py-3 sm:py-6 overflow-hidden relative z-10">
         {/* Mobile: constrained with padding, Desktop: edge-to-edge */}
         <div className="w-full px-3 sm:px-0 relative">
           {/* Carousel Container - rounded on mobile, no rounding on desktop */}
@@ -350,9 +352,9 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex flex-1 w-full overflow-visible">
+      <div className="flex flex-1 w-full overflow-visible relative z-10">
         {/* Sidebar - Active Filters (Desktop) */}
-        <aside className="hidden md:flex flex-col w-72 rounded-xl mx-8 my-0 p-6 shadow-lg border border-[#1e3a4d]/50" style={{ background: 'linear-gradient(180deg, #0d1f2d 0%, #0a1a28 50%, #071420 100%)' }}>
+        <aside className="hidden md:flex flex-col w-72 rounded-xl mx-8 my-4 p-6 shadow-lg border border-[#1e3a4d]/50" style={{ background: 'linear-gradient(180deg, #0d1f2d 0%, #0a1a28 50%, #071420 100%)' }}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-white">Active Filters</h3>
             {activeFilterCount > 0 && (
@@ -513,15 +515,16 @@ export default function Home() {
                 setSearchQuery(e.target.value)
                 setCurrentPage(1)
               }}
-              className="w-full sm:w-64 md:w-80 lg:w-[400px] px-4 py-2 rounded-lg bg-gray-900 text-white border border-gray-700 focus:outline-none focus:border-yellow-500 text-sm sm:text-base" 
+              className="w-full sm:w-64 md:w-80 lg:w-[400px] px-4 py-2 rounded-lg text-white border border-[#1e3a4d] focus:outline-none focus:border-yellow-500 text-sm sm:text-base" 
+              style={{ background: 'rgba(10, 24, 34, 0.8)' }}
             />
             <div className="flex items-center justify-between sm:justify-end gap-2">
               <span className="text-gray-300 text-sm sm:text-lg font-medium">Sort:</span>
             <select 
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'high-low' | 'low-high')}
-              className="bg-gray-800 text-gray-200 rounded-lg px-2 sm:px-4 py-2 border border-gray-700 focus:outline-none cursor-pointer text-sm sm:text-base flex-1 sm:flex-none"
-              style={{ minWidth: 140 }}
+              className="text-gray-200 rounded-lg px-2 sm:px-4 py-2 border border-[#1e3a4d] focus:outline-none cursor-pointer text-sm sm:text-base flex-1 sm:flex-none"
+              style={{ minWidth: 140, background: 'rgba(10, 24, 34, 0.8)' }}
             >
               <option value="high-low">High to Low</option>
               <option value="low-high">Low to High</option>
