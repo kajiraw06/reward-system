@@ -628,7 +628,9 @@ export default function Home() {
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                     : isLastOne 
                     ? 'bg-red-600 text-white hover:bg-red-700 animate-pulse' 
-                    : 'bg-gradient-to-b from-[#3b5998] to-[#1e3a6e] text-white hover:from-[#4a6aa8] hover:to-[#2a4a7e] border border-[#5a7ab8]'
+                    : tier === 'black-diamond'
+                    ? 'bg-gradient-to-b from-[#3b5998] to-[#1e3a6e] text-white hover:from-[#4a6aa8] hover:to-[#2a4a7e] border border-[#5a7ab8]'
+                    : tierStyles.buttonBg
                 }`}
                 onClick={() => !isOutOfStock && setSelectedReward(item)}
                 disabled={isOutOfStock}
