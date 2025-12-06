@@ -638,7 +638,6 @@ export default function Home() {
               >
                 {isOutOfStock ? 'OUT OF STOCK' : 'CLAIM NOW'}
               </motion.button>
-              </motion.button>
               </div>
               </div>
               </div>
