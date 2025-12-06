@@ -886,26 +886,26 @@ export default function Home() {
             transition={{ duration: 0.2 }}
           >
             <motion.div 
-              className="bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-4xl w-full text-yellow-100 relative max-h-[90vh] overflow-y-auto" 
+              className="bg-gradient-to-b from-[#1a2634] to-[#0f1922] rounded-2xl shadow-2xl p-6 max-w-3xl w-full text-white relative max-h-[90vh] overflow-y-auto" 
               onClick={(e) => e.stopPropagation()}
               initial={{ scale: 0.9, opacity: 0, y: 30 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 30 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
             >
-              <button className="absolute top-4 right-4 text-gray-400 hover:text-yellow-300 text-3xl font-bold z-10" onClick={() => setSelectedReward(null)}>&times;</button>
+              <button className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold z-10" onClick={() => setSelectedReward(null)}>&times;</button>
               
               {/* First Row - 2 Columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Column 1: Image and Gallery */}
-                <div className="flex flex-col gap-3 h-full">
+                <div className="flex flex-col gap-3">
                   {/* Main Display Image */}
-                  <div className="flex-1 bg-gray-900 rounded-xl flex items-center justify-center overflow-hidden border-2 border-yellow-700 relative">
+                  <div className="aspect-[658/403] bg-[#2a3441] rounded-lg flex items-center justify-center overflow-hidden">
                     <img 
                       src={
                         (selectedReward as any).galleries && selectedVariant && (selectedReward as any).galleries[selectedVariant]
                           ? (selectedReward as any).galleries[selectedVariant][selectedGalleryImage]
-                          : ((selectedReward as any).image || `https://via.placeholder.com/400x400/333333/FFFFFF?text=${encodeURIComponent(selectedReward.name)}`)
+                          : ((selectedReward as any).image || `https://via.placeholder.com/658x403/2a3441/666666?text=${encodeURIComponent(selectedReward.name)}`)
                       }
                       alt={`${selectedReward.name} - ${selectedVariant} - Image ${selectedGalleryImage + 1}`}
                       className="w-full h-full object-contain"
@@ -916,10 +916,10 @@ export default function Home() {
                     {[0, 1, 2, 3].map((idx) => (
                       <div 
                         key={idx} 
-                        className={`aspect-square bg-gray-700 rounded-lg border-2 cursor-pointer transition flex items-center justify-center overflow-hidden relative ${
+                        className={`aspect-[150/100] bg-[#2a3441] rounded-lg cursor-pointer transition flex items-center justify-center overflow-hidden relative border ${
                           selectedGalleryImage === idx 
-                            ? 'border-yellow-500 ring-2 ring-yellow-500' 
-                            : 'border-gray-600 hover:border-yellow-400'
+                            ? 'border-orange-500' 
+                            : 'border-transparent hover:border-gray-500'
                         }`}
                         onClick={() => setSelectedGalleryImage(idx)}
                       >
@@ -927,37 +927,37 @@ export default function Home() {
                           src={
                             (selectedReward as any).galleries && selectedVariant && (selectedReward as any).galleries[selectedVariant]
                               ? (selectedReward as any).galleries[selectedVariant][idx]
-                              : ((selectedReward as any).image || `https://via.placeholder.com/100x100/555555/FFFFFF?text=${idx + 1}`)
+                              : ((selectedReward as any).image || `https://via.placeholder.com/150x100/2a3441/666666?text=${idx + 1}`)
                           }
                           alt={`Gallery ${idx + 1}`}
                           className="w-full h-full object-cover"
                         />
-                        {selectedGalleryImage === idx && (
-                          <div className="absolute inset-0 bg-yellow-500/20 pointer-events-none" />
-                        )}
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Column 2: Reward Details */}
-                <div className="flex flex-col gap-4 h-full">
+                <div className="flex flex-col gap-3">
                   {/* Reward Name */}
-                  <h2 className="font-extrabold text-3xl text-yellow-200">{selectedReward.name}</h2>
+                  <h2 className="font-bold text-2xl text-white">{selectedReward.name}</h2>
+                  
+                  {/* Subtitle */}
+                  <p className="text-sm text-gray-400">{(selectedReward as any).description || selectedReward.name}</p>
                   
                   {/* Extra Detail */}
-                  <p className="text-sm text-gray-400">Premium quality reward from our exclusive collection. Limited availability.</p>
+                  <p className="text-xs text-gray-500">Premium quality reward from our exclusive collection. Limited availability.</p>
                   
                   {/* Variant Options */}
                   {(selectedReward as any).variants && (
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-300 uppercase">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                         Select {(selectedReward as any).variants.type}:
                       </label>
                       
                       {(selectedReward as any).variants.type === 'color' ? (
                         /* Colored circle buttons for color variants */
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-2">
                           {(selectedReward as any).variants.options.map((option: string) => {
                             const colorMap: { [key: string]: string } = {
                               'Black': '#000000',
@@ -989,9 +989,9 @@ export default function Home() {
                                   setSelectedVariant(option)
                                   setSelectedGalleryImage(0)
                                 }}
-                                className={`relative w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                                className={`relative w-7 h-7 rounded-full border-2 transition-all hover:scale-110 ${
                                   selectedVariant === option
-                                    ? 'border-yellow-400 ring-2 ring-yellow-400/50'
+                                    ? 'border-orange-500 ring-2 ring-orange-500/50'
                                     : 'border-gray-600 hover:border-gray-400'
                                 }`}
                                 style={{ backgroundColor: bgColor }}
@@ -1015,10 +1015,10 @@ export default function Home() {
                                 setSelectedVariant(option)
                                 setSelectedGalleryImage(0)
                               }}
-                              className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
+                              className={`px-3 py-1.5 rounded-lg font-medium text-sm transition ${
                                 selectedVariant === option
-                                  ? 'bg-yellow-500 text-black'
-                                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
+                                  ? 'bg-orange-500 text-white'
+                                  : 'bg-[#2a3441] text-gray-300 hover:bg-[#3a4451] border border-gray-600'
                               }`}
                             >
                               {option}
@@ -1030,28 +1030,28 @@ export default function Home() {
                   )}
                   
                   {/* Points */}
-                  <div className="flex items-center gap-2 text-2xl font-bold">
-                    <span className="text-3xl">🪙</span>
-                    <span className="text-yellow-300">{selectedReward.points.toLocaleString()} Points</span>
+                  <div className="flex items-center gap-2 text-xl font-bold">
+                    <span className="text-2xl">🪙</span>
+                    <span className="text-orange-400">{selectedReward.points.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   
                   {/* Claiming Steps */}
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <h3 className="font-bold text-sm text-yellow-400 mb-2">📋 Claiming Process:</h3>
-                    <ol className="text-xs text-gray-300 space-y-1 list-decimal list-inside">
-                      <li>Fill out the claim form below</li>
-                      <li>Wait for admin approval (24-48 hours)</li>
-                      <li>Receive confirmation via email/SMS</li>
-                      <li>Claim your reward or receive delivery</li>
+                  <div className="bg-[#1a2634]/50 rounded-lg p-3">
+                    <h3 className="font-semibold text-sm text-orange-400 mb-2">Claiming Process:</h3>
+                    <ol className="text-xs text-gray-400 space-y-0.5">
+                      <li>1. Fill out the claim form below.</li>
+                      <li>2. Wait for admin approval (24-48 hours).</li>
+                      <li>3. Receive confirmation via email/SMS.</li>
+                      <li>4. Claim your reward or receive delivery.</li>
                     </ol>
                   </div>
                 </div>
               </div>
 
               {/* Second Row - Claim Form */}
-              <div className="border-t border-gray-700 pt-6">
-                <h3 className="font-bold text-xl text-yellow-300 mb-4">Complete Your Claim</h3>
-                <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={async (e) => { 
+              <div className="border-t border-gray-700/50 pt-5">
+                <h3 className="font-bold text-lg text-white mb-4">Complete Your Claim</h3>
+                <form className="grid grid-cols-1 md:grid-cols-2 gap-3" onSubmit={async (e) => { 
                   e.preventDefault(); 
                   
                   const formData = new FormData(e.currentTarget);
@@ -1061,6 +1061,7 @@ export default function Home() {
                     username: formData.get('username'),
                     fullName: formData.get('fullName'),
                     phoneNumber: formData.get('phoneNumber'),
+                    email: formData.get('email'),
                     deliveryAddress: formData.get('deliveryAddress'),
                     ewalletName: formData.get('ewalletName'),
                     ewalletAccount: formData.get('ewalletAccount')
@@ -1091,21 +1092,28 @@ export default function Home() {
                     type="text" 
                     name="username"
                     placeholder="Username" 
-                    className="border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500" 
+                    className="border border-gray-700 rounded-lg px-4 py-3 bg-[#1a2634] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                     required 
                   />
                   <input 
                     type="text" 
                     name="fullName"
                     placeholder="Full Name" 
-                    className="border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500" 
+                    className="border border-gray-700 rounded-lg px-4 py-3 bg-[#1a2634] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                     required 
                   />
                   <input 
                     type="tel" 
                     name="phoneNumber"
                     placeholder="Phone Number" 
-                    className="border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500" 
+                    className="border border-gray-700 rounded-lg px-4 py-3 bg-[#1a2634] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
+                    required 
+                  />
+                  <input 
+                    type="email" 
+                    name="email"
+                    placeholder="Email Address" 
+                    className="border border-gray-700 rounded-lg px-4 py-3 bg-[#1a2634] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                     required 
                   />
                   
@@ -1116,36 +1124,39 @@ export default function Home() {
                         type="text" 
                         name="ewalletName"
                         placeholder="E-wallet Name (GCash/Maya)" 
-                        className="border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500" 
+                        className="border border-gray-700 rounded-lg px-4 py-3 bg-[#1a2634] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                         required 
                       />
                       <input 
                         type="text" 
                         name="ewalletAccount"
                         placeholder="E-wallet Account Number" 
-                        className="md:col-span-2 border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500" 
+                        className="md:col-span-2 border border-gray-700 rounded-lg px-4 py-3 bg-[#1a2634] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                         required 
                       />
                     </>
                   ) : (
-                    <textarea 
+                    <input 
+                      type="text"
                       name="deliveryAddress"
                       placeholder="Complete Delivery Address" 
-                      className="md:col-span-2 border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 min-h-[100px]" 
+                      className="md:col-span-2 border border-gray-700 rounded-lg px-4 py-3 bg-[#1a2634] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
                       required 
                     />
                   )}
                   
                   {/* Submit Button */}
-                  <motion.button 
-                    type="submit" 
-                    className="md:col-span-2 bg-yellow-600 text-black px-6 py-3 rounded-lg font-bold text-lg shadow-lg hover:bg-yellow-500 transition mt-2"
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(234, 179, 8, 0.5)" }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
-                    Confirm Claim
-                  </motion.button>
+                  <div className="md:col-span-2 flex justify-center mt-2">
+                    <motion.button 
+                      type="submit" 
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-12 py-3 rounded-full font-bold text-sm uppercase tracking-wider shadow-lg hover:from-orange-600 hover:to-orange-700 transition"
+                      whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(249, 115, 22, 0.4)" }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                      Confirm Claim
+                    </motion.button>
+                  </div>
                 </form>
               </div>
             </motion.div>
