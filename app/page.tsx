@@ -1061,8 +1061,8 @@ export default function Home() {
                   
                   {/* Points */}
                   <div className="flex items-center gap-2 mt-4">
-                    <span className="text-2xl">🟢</span>
-                    <span className="text-2xl font-bold text-green-400">{selectedReward.points.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="text-2xl">🪙</span>
+                    <span className="text-2xl font-bold text-orange-400">{selectedReward.points.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   
                   {/* Claiming Steps */}
