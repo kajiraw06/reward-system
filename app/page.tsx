@@ -139,7 +139,7 @@ export default function Home() {
           className: 'tier-black-diamond',
           textColor: 'text-purple-300',
           pointsColor: 'text-purple-400',
-          buttonBg: 'bg-purple-600 hover:bg-purple-700 text-white',
+          buttonBg: 'bg-gradient-to-b from-[#3b5998] to-[#1e3a6e] text-white hover:from-[#4a6aa8] hover:to-[#2a4a7e] border border-[#5a7ab8]',
           tierLabel: 'BLACK DIAMOND',
           tierLabelBg: 'bg-gradient-to-r from-purple-900 to-black'
         }
