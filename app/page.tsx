@@ -13,6 +13,7 @@ let MAX_POINTS = 500000
 
 // Banner images for carousel
 const bannerImages = [
+  { src: '/claim-reward-banner.png', alt: 'Claim Your Reward Today - Time2Claim' },
   { src: '/Time2Claim.png', alt: 'Time2Claim banner' },
   { src: '/iphone17promax.png', alt: 'iPhone 17 Pro Max' },
   { src: '/bmw.png', alt: 'BMW M2 2025' },
@@ -276,6 +277,14 @@ export default function Home() {
           </button>
         </div>
       </header>
+      {/* Hero Banner - Static at top */}
+      <div className="w-full relative z-10">
+        <img 
+          src="/claim-reward-banner.png" 
+          alt="Claim Your Reward Today - Time2Claim" 
+          className="w-full h-auto object-cover"
+        />
+      </div>
       {/* Banner Carousel - Infinite Left Scroll */}
       <div className="w-full py-3 sm:py-6 overflow-hidden relative z-10">
         {/* Mobile: constrained with padding, Desktop: edge-to-edge */}
