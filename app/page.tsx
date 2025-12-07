@@ -141,10 +141,10 @@ export default function Home() {
           className: 'tier-black-diamond',
           textColor: 'text-white',
           pointsColor: 'text-yellow-400',
-          buttonBg: 'bg-[#1e3a8a] hover:bg-[#1e3a8a]/80 text-white font-bold uppercase tracking-wider shadow-lg',
+          buttonBg: 'bg-[#1e3a8a] hover:bg-[#1e3a8a]/80 text-white font-bold uppercase tracking-wider shadow-lg border-2 border-blue-300',
           tierLabel: 'BLACK DIAMOND',
           tierLabelBg: 'bg-gradient-to-r from-purple-900 to-black',
-          cardBg: 'bg-[#1a1f3a]', // Dark navy blue background
+          cardBg: 'bg-gradient-to-b from-[#05054F] to-[#32318F]', // Black Diamond gradient background
           imageOverlay: 'bg-gradient-to-br from-transparent via-purple-900/20 to-blue-900/30' // Cosmic overlay
         }
       case 'diamond':
@@ -157,7 +157,7 @@ export default function Home() {
           buttonBg: 'bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white font-bold uppercase tracking-wider shadow-lg border-2 border-purple-400',
           tierLabel: '💠 DIAMOND',
           tierLabelBg: 'bg-gradient-to-r from-indigo-600 to-purple-600',
-          cardBg: 'bg-gradient-to-br from-[#3d2463] via-[#2d1850] to-[#1f0f3a]', // Deep purple cosmic gradient background
+          cardBg: 'bg-gradient-to-b from-[#2D1E44] to-[#67219D]', // Diamond gradient background
           imageOverlay: 'bg-gradient-to-br from-purple-400/20 via-violet-500/30 to-blue-500/20' // Cosmic light rays overlay
         }
       case 'gold':
@@ -167,31 +167,37 @@ export default function Home() {
           className: 'tier-gold',
           textColor: 'text-white',
           pointsColor: 'text-yellow-400',
-          buttonBg: 'bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white font-bold uppercase tracking-wider shadow-lg',
+          buttonBg: 'bg-gradient-to-b from-[#d4af37] to-[#b8941e] hover:from-[#e0c050] hover:to-[#c9a530] text-white font-bold uppercase tracking-wider shadow-lg border-2 border-yellow-300',
           tierLabel: 'GOLD',
-          tierLabelBg: 'bg-gradient-to-r from-yellow-500 to-yellow-600'
+          tierLabelBg: 'bg-gradient-to-r from-yellow-500 to-yellow-600',
+          cardBg: 'bg-gradient-to-b from-[#FCDB6A] to-[#A66F08]', // Gold gradient background
+          imageOverlay: 'bg-gradient-to-br from-yellow-400/20 via-yellow-600/30 to-yellow-800/20' // Gold light rays
         }
       case 'silver':
         return {
           borderColor: '#c0c0c0',
           animation: 'silverShine 3s ease-in-out infinite',
           className: 'tier-silver',
-          textColor: 'text-gray-800',
-          pointsColor: 'text-gray-700',
-          buttonBg: 'bg-gray-700 hover:bg-gray-800 text-white',
+          textColor: 'text-white',
+          pointsColor: 'text-yellow-400',
+          buttonBg: 'bg-gradient-to-b from-[#b8b8b8] to-[#8a8a8a] hover:from-[#c8c8c8] hover:to-[#9a9a9a] text-white font-bold uppercase tracking-wider shadow-lg border-2 border-gray-300',
           tierLabel: 'SILVER',
-          tierLabelBg: 'bg-gradient-to-r from-gray-400 to-gray-500'
+          tierLabelBg: 'bg-gradient-to-r from-gray-400 to-gray-500',
+          cardBg: 'bg-gradient-to-b from-[#E9E9EB] to-[#494A4E]', // Silver gradient background
+          imageOverlay: 'bg-gradient-to-br from-gray-300/20 via-gray-400/30 to-gray-600/20' // Silver light rays
         }
       default: // bronze
         return {
           borderColor: '#cd7f32',
           animation: 'bronzeMatte 3s ease-in-out infinite',
           className: 'tier-bronze',
-          textColor: 'text-yellow-100',
-          pointsColor: 'text-yellow-200',
-          buttonBg: 'bg-yellow-900 hover:bg-yellow-800 text-yellow-100',
+          textColor: 'text-white',
+          pointsColor: 'text-yellow-400',
+          buttonBg: 'bg-gradient-to-b from-[#b8860b] to-[#8b6914] hover:from-[#c89615] hover:to-[#9b7a1a] text-white font-bold uppercase tracking-wider shadow-lg border-2 border-yellow-600',
           tierLabel: 'BRONZE',
-          tierLabelBg: 'bg-gradient-to-r from-amber-700 to-amber-800'
+          tierLabelBg: 'bg-gradient-to-r from-amber-700 to-amber-800',
+          cardBg: 'bg-gradient-to-b from-[#C97D03] to-[#2B1807]', // Bronze gradient background
+          imageOverlay: 'bg-gradient-to-br from-amber-700/20 via-amber-900/30 to-yellow-900/20' // Bronze light rays
         }
     }
   }
@@ -698,7 +704,7 @@ export default function Home() {
                   isLastOne 
                     ? 'border-red-500' 
                     : ''
-                } ${tier === 'black-diamond' ? tierStyles.cardBg : tier === 'diamond' ? 'bg-gradient-to-br from-[#3d2463] via-[#2d1850] to-[#1f0f3a]' : 'bg-white'}`} 
+                } ${tier === 'black-diamond' ? 'bg-gradient-to-b from-[#05054F] to-[#32318F]' : tier === 'diamond' ? 'bg-gradient-to-b from-[#2D1E44] to-[#67219D]' : tier === 'gold' ? 'bg-gradient-to-b from-[#FCDB6A] to-[#A66F08]' : tier === 'silver' ? 'bg-gradient-to-b from-[#E9E9EB] to-[#494A4E]' : tier === 'bronze' ? 'bg-gradient-to-b from-[#C97D03] to-[#2B1807]' : 'bg-white'}`} 
                 style={{
                   width: '295px',
                   height: '439px',
@@ -722,13 +728,13 @@ export default function Home() {
                   alt={item.name}
                   className="w-full h-full object-cover rounded-[10px]"
                 />
-                {/* Cosmic overlay for Black Diamond and Diamond tiers */}
-                {(tier === 'black-diamond' || tier === 'diamond') && (
+                {/* Cosmic overlay for premium tiers */}
+                {(tier === 'black-diamond' || tier === 'diamond' || tier === 'gold' || tier === 'silver' || tier === 'bronze') && (
                   <div className={`absolute inset-0 ${tierStyles.imageOverlay} rounded-[10px] pointer-events-none`}></div>
                 )}
               </div>
               
-              <div className={`px-3 py-3 w-full flex flex-col gap-1 ${tier === 'diamond' ? 'bg-transparent' : ''}`}>
+              <div className={`px-3 py-3 w-full flex flex-col gap-1 ${(tier === 'diamond' || tier === 'gold' || tier === 'silver' || tier === 'bronze') ? 'bg-transparent' : ''}`}>
               {/* Reward Name - Left aligned */}
               <div className={`font-extrabold text-lg text-left w-full ${tierStyles.textColor}`}>{item.name}</div>
               

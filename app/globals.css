@@ -187,7 +187,7 @@
 
 /* Tier card backgrounds */
 .tier-black-diamond {
-  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%) !important;
+  background: linear-gradient(180deg, #05054F 0%, #32318F 100%) !important;
   position: relative;
   overflow: hidden !important;
 }
@@ -208,7 +208,7 @@
 }
 
 .tier-diamond {
-  background: linear-gradient(135deg, #3d2463 0%, #2d1850 50%, #1f0f3a 100%) !important;
+  background: linear-gradient(180deg, #2D1E44 0%, #67219D 100%) !important;
   position: relative;
   overflow: hidden !important;
 }
@@ -235,7 +235,7 @@
 }
 
 .tier-gold {
-  background: linear-gradient(135deg, #ffd700 0%, #ffb300 30%, #ff9800 60%, #ffc107 100%) !important;
+  background: linear-gradient(180deg, #FCDB6A 0%, #A66F08 100%) !important;
   position: relative;
   overflow: hidden !important;
 }
@@ -253,13 +253,13 @@
 }
 
 .tier-silver {
-  background: linear-gradient(135deg, #e8e8e8 0%, #c0c0c0 30%, #a8a8a8 60%, #d0d0d0 100%) !important;
+  background: linear-gradient(180deg, #E9E9EB 0%, #494A4E 100%) !important;
   position: relative;
   overflow: hidden !important;
 }
 
 .tier-bronze {
-  background: linear-gradient(135deg, #cd7f32 0%, #b87333 30%, #a0522d 60%, #cd853f 100%) !important;
+  background: linear-gradient(180deg, #C97D03 0%, #2B1807 100%) !important;
   position: relative;
   overflow: hidden !important;
 }
