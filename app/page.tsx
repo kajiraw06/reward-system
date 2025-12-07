@@ -37,6 +37,8 @@ export default function Home() {
   const [checkClaimId, setCheckClaimId] = useState('')
   const [isChecking, setIsChecking] = useState(false)
   const [claimStatus, setClaimStatus] = useState<{status: string, color: string, message: string} | null>(null)
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [userPoints, setUserPoints] = useState(500000) // User's current points
 
   // Fetch rewards from database
   useEffect(() => {
@@ -134,14 +136,16 @@ export default function Home() {
     switch (tier) {
       case 'black-diamond':
         return {
-          borderColor: '#8b5cf6',
+          borderColor: '#a78bfa',
           animation: 'blackDiamondGlow 2s ease-in-out infinite',
           className: 'tier-black-diamond',
-          textColor: 'text-purple-300',
-          pointsColor: 'text-purple-400',
-          buttonBg: 'bg-gradient-to-b from-[#3b5998] to-[#1e3a6e] text-white hover:from-[#4a6aa8] hover:to-[#2a4a7e] border border-[#5a7ab8]',
+          textColor: 'text-white',
+          pointsColor: 'text-yellow-400',
+          buttonBg: 'bg-[#1e3a8a] hover:bg-[#1e3a8a]/80 text-white font-bold uppercase tracking-wider shadow-lg',
           tierLabel: 'BLACK DIAMOND',
-          tierLabelBg: 'bg-gradient-to-r from-purple-900 to-black'
+          tierLabelBg: 'bg-gradient-to-r from-purple-900 to-black',
+          cardBg: 'bg-[#1a1f3a]', // Dark navy blue background
+          imageOverlay: 'bg-gradient-to-br from-transparent via-purple-900/20 to-blue-900/30' // Cosmic overlay
         }
       case 'diamond':
         return {
@@ -254,19 +258,37 @@ export default function Home() {
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/Rectangle 22.png')" }}
       />
-      {/* Header */}
-      <header className="w-full px-4 sm:px-8 py-2 flex items-center justify-between shadow-lg relative z-10" style={{ background: 'linear-gradient(180deg, rgba(13, 31, 53, 0.95) 0%, rgba(10, 22, 40, 0.9) 100%)', borderBottom: '1px solid rgba(30, 58, 77, 0.3)' }}>
+      {/* Header - Matching new design */}
+      <header className="w-full px-4 sm:px-8 py-3 flex items-center justify-between shadow-lg relative z-10" style={{ background: 'linear-gradient(180deg, rgba(13, 31, 53, 0.95) 0%, rgba(10, 22, 40, 0.9) 100%)', borderBottom: '1px solid rgba(30, 58, 77, 0.3)' }}>
+        {/* Logo */}
         <div className="flex items-center gap-4">
-          <img src="/time2bet-logo.svg" alt="Time2Bet Logo" className="w-24 sm:w-[140px]" />
+          <img src="/Time2Claim 1.png" alt="Time2Claim Logo" className="w-32 sm:w-[180px]" />
         </div>
-        <div className="flex items-center gap-2 sm:gap-6">
-          {/* Claims Checker button */}
+        
+        {/* Right side - Welcome message and Earn Points button */}
+        <div className="flex items-center gap-3 sm:gap-6">
+          {/* Welcome message with user icon */}
+          <div className="hidden sm:flex items-center gap-2 text-gray-300">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm">Welcome, Warren!</span>
+          </div>
+          
+          {/* Earn More Points button */}
           <button 
-            className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black rounded-lg font-semibold text-sm transition-all shadow-lg"
             onClick={() => setShowClaimsChecker(true)}
           >
-            Claims Checker
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <span className="hidden sm:inline">Earn More Points</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </button>
+          
           {/* Mobile filter button */}
           <button 
             className="md:hidden px-3 py-2 bg-yellow-500 text-black rounded-lg font-semibold text-sm"
@@ -284,33 +306,106 @@ export default function Home() {
           className="w-full h-auto object-cover"
         />
       </div>
-      {/* Banner Carousel - Infinite Left Scroll */}
-      <div className="w-full py-3 sm:py-6 overflow-hidden relative z-10">
-        {/* Mobile: constrained with padding, Desktop: edge-to-edge */}
-        <div className="w-full px-3 sm:px-0 relative">
-          {/* Carousel Container - rounded on mobile, no rounding on desktop */}
-          <div className="relative h-24 xs:h-32 sm:h-56 md:h-72 overflow-hidden rounded-xl sm:rounded-none">
-            <div 
-              className="flex animate-carousel h-full"
-              style={{ width: `${bannerImages.length * 2 * 100}%` }}
-            >
-              {/* Duplicate images for seamless loop */}
-              {[...bannerImages, ...bannerImages].map((img, index) => (
+      {/* 3D Perspective Carousel */}
+      <div className="w-full py-8 sm:py-12 overflow-hidden relative z-10" style={{ perspective: '1200px' }}>
+        <div className="relative h-64 sm:h-80 md:h-96 flex items-center justify-center">
+          {/* Render all reward cards with 3D positioning */}
+          {sortedRewards.slice(0, 5).map((reward, index) => {
+            const position = index - currentSlide
+            const isCenter = position === 0
+            const absPosition = Math.abs(position)
+            
+            // Calculate transforms for 3D carousel effect
+            const translateX = position * 280 // Horizontal spacing
+            const translateZ = isCenter ? 0 : -150 - (absPosition - 1) * 50 // Depth
+            const scale = isCenter ? 1 : 0.85 - (absPosition - 1) * 0.1 // Scale
+            const opacity = absPosition > 2 ? 0 : isCenter ? 1 : 0.6 // Visibility
+            const rotateY = position * -15 // Slight rotation
+            
+            const tierStyles = getTierStyles(getTier(reward.points, reward.name))
+            
+            return (
+              <div
+                key={reward.id}
+                className="absolute transition-all duration-500 ease-out cursor-pointer"
+                style={{
+                  transform: `translateX(${translateX}px) translateZ(${translateZ}px) scale(${scale}) rotateY(${rotateY}deg)`,
+                  opacity: opacity,
+                  zIndex: isCenter ? 10 : 5 - absPosition,
+                  pointerEvents: absPosition > 2 ? 'none' : 'auto'
+                }}
+                onClick={() => setCurrentSlide(index)}
+              >
+                {/* Card */}
                 <div 
-                  key={index} 
-                  className="h-full flex items-center justify-center px-4"
-                  style={{ width: `${100 / (bannerImages.length * 2)}%` }}
+                  className="w-56 h-80 sm:w-64 sm:h-96 rounded-2xl overflow-hidden shadow-2xl"
+                  style={{
+                    border: `3px solid ${tierStyles.borderColor}`,
+                    animation: isCenter ? tierStyles.animation : 'none'
+                  }}
                 >
-                  <img 
-                    src={img.src} 
-                    alt={img.alt} 
-                    className="max-w-full max-h-full object-contain"
-                  />
+                  {/* Image Container */}
+                  <div className="relative h-3/4 bg-gradient-to-br from-gray-200 to-gray-300">
+                    <img
+                      src={reward.image_url || '/placeholder.png'}
+                      alt={reward.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  
+                  {/* Info Footer with Blue Gradient - Matching reference */}
+                  <div className="h-1/4 bg-gradient-to-br from-[#0099ff] via-[#0066cc] to-[#0044aa] p-4 flex flex-col justify-center relative overflow-hidden">
+                    {/* Subtle shine effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                    <h3 className="text-white font-bold text-sm sm:text-base truncate relative z-10">
+                      {reward.name}
+                    </h3>
+                    <p className="text-cyan-200 text-xs sm:text-sm flex items-center gap-1 relative z-10">
+                      <img src="/Pts 1.png" alt="Points" className="w-4 h-4" />
+                      {reward.points.toLocaleString()} Pts
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            )
+          })}
         </div>
+        
+        {/* Navigation Dots */}
+        <div className="flex justify-center gap-2 mt-6">
+          {sortedRewards.slice(0, 5).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                currentSlide === index 
+                  ? 'bg-yellow-400 w-8' 
+                  : 'bg-gray-500 hover:bg-gray-400'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+        
+        {/* Navigation Arrows */}
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev > 0 ? prev - 1 : sortedRewards.slice(0, 5).length - 1))}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
+          aria-label="Previous slide"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev < sortedRewards.slice(0, 5).length - 1 ? prev + 1 : 0))}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
+          aria-label="Next slide"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
       {/* Mobile Filter Drawer */}
       {mobileFiltersOpen && (
@@ -381,7 +476,7 @@ export default function Home() {
           {/* Points Range Slider */}
           <div className="mb-8 bg-[#0a1822]/60 rounded-xl p-4 border border-[#1e3a4d]/30">
             <h4 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-              <span className="text-yellow-400">🪙</span> Points Range
+              <img src="/Pts 1.png" alt="Points" className="w-5 h-5" /> Points Range
             </h4>
             <div className="space-y-3">
               <div className="flex justify-between text-xs text-gray-400">
@@ -517,29 +612,38 @@ export default function Home() {
         </aside>
         {/* Main Content */}
         <main className="flex-1 flex flex-col items-center px-3 sm:px-4 md:px-8 py-4 overflow-visible">
-          <div className="w-full flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center mb-4 sm:mb-6">
-            <input 
-              type="text" 
-              placeholder="Search rewards..." 
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="w-full sm:w-64 md:w-80 lg:w-[400px] px-4 py-2 rounded-lg text-white border border-[#1e3a4d] focus:outline-none focus:border-yellow-500 text-sm sm:text-base" 
-              style={{ background: 'rgba(10, 24, 34, 0.8)' }}
-            />
-            <div className="flex items-center justify-between sm:justify-end gap-2">
-              <span className="text-gray-300 text-sm sm:text-lg font-medium">Sort:</span>
-            <select 
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as 'high-low' | 'low-high')}
-              className="text-gray-200 rounded-lg px-2 sm:px-4 py-2 border border-[#1e3a4d] focus:outline-none cursor-pointer text-sm sm:text-base flex-1 sm:flex-none"
-              style={{ minWidth: 140, background: 'rgba(10, 24, 34, 0.8)' }}
-            >
-              <option value="high-low">High to Low</option>
-              <option value="low-high">Low to High</option>
-            </select>
+          <div className="w-full max-w-7xl flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center mb-4 sm:mb-6 px-1">
+            {/* Search Bar with Icon - Matching reference design */}
+            <div className="relative w-full sm:w-64 md:w-80 lg:w-[400px]">
+              {/* Search Icon */}
+              <svg 
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                />
+              </svg>
+              <input 
+                type="text" 
+                placeholder="Search Rewards..." 
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-full pl-12 pr-4 py-3 rounded-xl text-gray-300 placeholder-gray-500 bg-[#1a2d3d] border border-[#2a3d4d] focus:outline-none focus:border-[#3a4d5d] focus:bg-[#243542] transition-all text-sm" 
+              />
+            </div>
+            {/* User Points Badge - Positioned on far right */}
+            <div className="flex items-center gap-2 bg-[#2a3d4d] rounded-full px-4 py-3 border border-[#3a4d5d] sm:ml-auto">
+              <img src="/Pts 1.png" alt="Points" className="w-6 h-6" />
+              <span className="text-white font-bold text-base">{userPoints.toLocaleString()} Pts.</span>
             </div>
           </div>
           {loading ? (
@@ -592,7 +696,7 @@ export default function Home() {
                   isLastOne 
                     ? 'border-red-500' 
                     : ''
-                }`} 
+                } ${tier === 'black-diamond' ? tierStyles.cardBg : 'bg-white'}`} 
                 style={{
                   width: '295px',
                   height: '439px',
@@ -604,7 +708,7 @@ export default function Home() {
                 }}
               >
               {/* Image - fills most of card */}
-              <div className={`w-full flex-1 rounded-t-[10px] px-3 py-3 flex items-center justify-center overflow-hidden ${
+              <div className={`w-full flex-1 rounded-t-[10px] px-3 py-3 flex items-center justify-center overflow-hidden relative ${
                 tier === 'black-diamond' ? 'bg-transparent' :
                 tier === 'diamond' ? 'bg-transparent' :
                 tier === 'gold' ? 'bg-transparent' :
@@ -616,6 +720,10 @@ export default function Home() {
                   alt={item.name}
                   className="w-full h-full object-cover rounded-[10px]"
                 />
+                {/* Cosmic overlay for Black Diamond tier */}
+                {tier === 'black-diamond' && (
+                  <div className={`absolute inset-0 ${tierStyles.imageOverlay} rounded-[10px] pointer-events-none`}></div>
+                )}
               </div>
               
               <div className="px-3 py-3 w-full flex flex-col gap-1">
@@ -624,7 +732,7 @@ export default function Home() {
               
               {/* Points with token icon - Left aligned */}
               <div className={`mb-0 text-left w-full flex items-center gap-2 font-medium ${tierStyles.textColor}`}>
-                <span className="text-xl">🪙</span>
+                <img src="/Pts 1.png" alt="Points" className="w-5 h-5" />
                 <span className={`${tierStyles.pointsColor} font-bold text-lg`}>{item.points.toLocaleString()}</span>
               </div>
               
@@ -634,10 +742,8 @@ export default function Home() {
                 className={`px-6 py-2.5 rounded-lg font-bold shadow transition w-full mt-auto text-sm uppercase tracking-wide ${
                   isOutOfStock
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : isLastOne 
+                    : isLastOne && tier !== 'black-diamond'
                     ? 'bg-red-600 text-white hover:bg-red-700 animate-pulse' 
-                    : tier === 'black-diamond'
-                    ? 'bg-gradient-to-b from-[#3b5998] to-[#1e3a6e] text-white hover:from-[#4a6aa8] hover:to-[#2a4a7e] border border-[#5a7ab8]'
                     : tierStyles.buttonBg
                 }`}
                 onClick={() => !isOutOfStock && setSelectedReward(item)}
@@ -1073,7 +1179,7 @@ export default function Home() {
                   
                   {/* Points */}
                   <div className="flex items-center gap-2 mt-4">
-                    <span className="text-2xl">🪙</span>
+                    <img src="/Pts 1.png" alt="Points" className="w-7 h-7" />
                     <span className="text-2xl font-bold text-orange-400">{selectedReward.points.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   
