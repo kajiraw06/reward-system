@@ -208,7 +208,7 @@
 }
 
 .tier-diamond {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 30%, #dee2e6 60%, #f8f9fa 100%) !important;
+  background: linear-gradient(135deg, #3d2463 0%, #2d1850 50%, #1f0f3a 100%) !important;
   position: relative;
   overflow: hidden !important;
 }

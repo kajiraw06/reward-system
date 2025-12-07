@@ -149,23 +149,25 @@ export default function Home() {
         }
       case 'diamond':
         return {
-          borderColor: '#e5e7eb',
+          borderColor: '#a78bfa',
           animation: 'diamondSparkle 2s ease-in-out infinite',
           className: 'tier-diamond',
-          textColor: 'text-gray-800',
-          pointsColor: 'text-purple-600',
-          buttonBg: 'bg-gray-800 hover:bg-gray-900 text-white',
+          textColor: 'text-white',
+          pointsColor: 'text-yellow-400',
+          buttonBg: 'bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white font-bold uppercase tracking-wider shadow-lg border-2 border-purple-400',
           tierLabel: '💠 DIAMOND',
-          tierLabelBg: 'bg-gradient-to-r from-indigo-600 to-purple-600'
+          tierLabelBg: 'bg-gradient-to-r from-indigo-600 to-purple-600',
+          cardBg: 'bg-gradient-to-br from-[#3d2463] via-[#2d1850] to-[#1f0f3a]', // Deep purple cosmic gradient background
+          imageOverlay: 'bg-gradient-to-br from-purple-400/20 via-violet-500/30 to-blue-500/20' // Cosmic light rays overlay
         }
       case 'gold':
         return {
           borderColor: '#ffd700',
           animation: 'goldGlow 2s ease-in-out infinite',
           className: 'tier-gold',
-          textColor: 'text-yellow-900',
-          pointsColor: 'text-yellow-800',
-          buttonBg: 'bg-black hover:bg-gray-800 text-yellow-400',
+          textColor: 'text-white',
+          pointsColor: 'text-yellow-400',
+          buttonBg: 'bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white font-bold uppercase tracking-wider shadow-lg',
           tierLabel: 'GOLD',
           tierLabelBg: 'bg-gradient-to-r from-yellow-500 to-yellow-600'
         }
@@ -696,7 +698,7 @@ export default function Home() {
                   isLastOne 
                     ? 'border-red-500' 
                     : ''
-                } ${tier === 'black-diamond' ? tierStyles.cardBg : 'bg-white'}`} 
+                } ${tier === 'black-diamond' ? tierStyles.cardBg : tier === 'diamond' ? 'bg-gradient-to-br from-[#3d2463] via-[#2d1850] to-[#1f0f3a]' : 'bg-white'}`} 
                 style={{
                   width: '295px',
                   height: '439px',
@@ -720,13 +722,13 @@ export default function Home() {
                   alt={item.name}
                   className="w-full h-full object-cover rounded-[10px]"
                 />
-                {/* Cosmic overlay for Black Diamond tier */}
-                {tier === 'black-diamond' && (
+                {/* Cosmic overlay for Black Diamond and Diamond tiers */}
+                {(tier === 'black-diamond' || tier === 'diamond') && (
                   <div className={`absolute inset-0 ${tierStyles.imageOverlay} rounded-[10px] pointer-events-none`}></div>
                 )}
               </div>
               
-              <div className="px-3 py-3 w-full flex flex-col gap-1">
+              <div className={`px-3 py-3 w-full flex flex-col gap-1 ${tier === 'diamond' ? 'bg-transparent' : ''}`}>
               {/* Reward Name - Left aligned */}
               <div className={`font-extrabold text-lg text-left w-full ${tierStyles.textColor}`}>{item.name}</div>
               
@@ -742,7 +744,7 @@ export default function Home() {
                 className={`px-6 py-2.5 rounded-lg font-bold shadow transition w-full mt-auto text-sm uppercase tracking-wide ${
                   isOutOfStock
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : isLastOne && tier !== 'black-diamond'
+                    : isLastOne && tier !== 'black-diamond' && tier !== 'diamond' && tier !== 'gold'
                     ? 'bg-red-600 text-white hover:bg-red-700 animate-pulse' 
                     : tierStyles.buttonBg
                 }`}
