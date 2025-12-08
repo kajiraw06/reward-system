@@ -259,30 +259,16 @@ export default function Home() {
   // Mobile filter drawer state
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
-  // Auto-scroll carousel every 3 seconds
+  // Auto-scroll carousel
   useEffect(() => {
     if (sortedRewards.length === 0) return
-
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => prev + 1)
+    
+    const timer = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % sortedRewards.length)
     }, 3000)
-
-    return () => clearInterval(interval)
+    
+    return () => clearInterval(timer)
   }, [sortedRewards.length])
-
-  // Reset position seamlessly when reaching end of middle set
-  useEffect(() => {
-    if (sortedRewards.length === 0) return
-    
-    const carouselLength = sortedRewards.length
-    
-    // When we reach the end of the second set, instantly jump to start of second set
-    if (currentSlide >= carouselLength * 2) {
-      setTimeout(() => {
-        setCurrentSlide(carouselLength)
-      }, 800) // Wait for transition to complete
-    }
-  }, [currentSlide, sortedRewards.length])
 
   return (
     <div className="min-h-screen text-white flex flex-col overflow-visible relative">
@@ -339,79 +325,49 @@ export default function Home() {
           className="w-full h-auto object-cover"
         />
       </div>
-      
-      {/* 3D Perspective Carousel */}
-      <div className="w-full py-8 sm:py-12 overflow-hidden relative z-10" style={{ perspective: '1200px' }}>
-        <div className="relative h-64 sm:h-80 md:h-96 w-full flex items-center justify-center">
-          {/* Render rewards multiple times for infinite loop */}
-          {sortedRewards.length > 0 && [...sortedRewards, ...sortedRewards, ...sortedRewards].map((reward, index) => {
-            const carouselLength = sortedRewards.length
-            const actualIndex = index % carouselLength
-            
-            // Calculate position relative to current slide
-            const position = index - currentSlide
-            const isCenter = position === 0
-            const absPosition = Math.abs(position)
-            
-            // Only render cards that are close to the current view
-            if (absPosition > 3) return null
-            
-            // Calculate transforms for 3D carousel effect
-            const translateX = position * 280 // Horizontal spacing
-            const translateZ = isCenter ? 0 : -150 - (absPosition - 1) * 50 // Depth - push back side cards
-            const rotateY = position * -15 // Slight rotation
-            const scale = isCenter ? 1 : Math.max(0.6, 0.85 - (absPosition - 1) * 0.1) // Scale
-            const opacity = absPosition > 2 ? 0 : isCenter ? 1 : 0.5 // Visibility - fade in/out at edges
-            
-            const tierStyles = getTierStyles(getTier(reward.points, reward.name))
-            
-            return (
-              <div
-                key={`carousel-${reward.id}-${index}`}
-                className="absolute cursor-pointer"
-                style={{
-                  transform: `translateX(${translateX}px) translateZ(${translateZ}px) scale(${scale}) rotateY(${rotateY}deg)`,
-                  opacity: opacity,
-                  zIndex: isCenter ? 10 : 5 - absPosition,
-                  pointerEvents: 'none',
-                  transition: 'all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1)',
-                  transformStyle: 'preserve-3d'
-                }}
-              >
-                {/* Card */}
-                <div 
-                  className="w-56 h-80 sm:w-64 sm:h-96 rounded-2xl overflow-hidden shadow-2xl"
+
+      {/* New Simple Carousel */}
+      {sortedRewards.length > 0 && (
+        <div className="w-full py-12 overflow-hidden relative z-10">
+          <div className="relative h-96 flex items-center justify-center" style={{ perspective: '1200px' }}>
+            {[...Array(5)].map((_, i) => {
+              const index = (currentSlide + i) % sortedRewards.length
+              const reward = sortedRewards[index]
+              const position = i - 2 // -2, -1, 0, 1, 2
+              const isCenter = position === 0
+              
+              return (
+                <div
+                  key={i}
+                  className="absolute transition-all duration-700 ease-out"
                   style={{
-                    border: `3px solid ${tierStyles.borderColor}`,
-                    animation: isCenter ? tierStyles.animation : 'none'
+                    transform: `translateX(${position * 300}px) scale(${isCenter ? 1.1 : 0.8})`,
+                    opacity: Math.abs(position) > 2 ? 0 : isCenter ? 1 : 0.6,
+                    zIndex: isCenter ? 10 : 5 - Math.abs(position)
                   }}
                 >
-                  {/* Image Container */}
-                  <div className="relative h-3/4 bg-gradient-to-br from-gray-200 to-gray-300">
-                    <img
-                      src={reward.image_url || '/placeholder.png'}
-                      alt={reward.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  
-                  {/* Info Footer with Blue Gradient */}
-                  <div className="h-1/4 bg-gradient-to-br from-[#0099ff] via-[#0066cc] to-[#0044aa] p-4 flex flex-col justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                    <h3 className="text-white font-bold text-sm sm:text-base truncate relative z-10">
-                      {reward.name}
-                    </h3>
-                    <p className="text-cyan-200 text-xs sm:text-sm flex items-center gap-1 relative z-10">
-                      <img src="/Pts 1.png" alt="Points" className="w-4 h-4" />
-                      {reward.points.toLocaleString()} Pts
-                    </p>
+                  <div className="w-64 h-96 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900">
+                    <div className="h-3/4 relative">
+                      <img
+                        src={reward.image_url || '/placeholder.png'}
+                        alt={reward.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="h-1/4 bg-gradient-to-br from-[#0099ff] via-[#0066cc] to-[#0044aa] p-4 flex flex-col justify-center">
+                      <h3 className="text-white font-bold text-base truncate">{reward.name}</h3>
+                      <p className="text-cyan-200 text-sm flex items-center gap-1">
+                        <img src="/Pts 1.png" alt="Points" className="w-4 h-4" />
+                        {reward.points.toLocaleString()} Pts
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Mobile Filter Drawer */}
       {mobileFiltersOpen && (
