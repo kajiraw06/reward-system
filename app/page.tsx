@@ -265,7 +265,7 @@ export default function Home() {
     
     const timer = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % sortedRewards.length)
-    }, 3000)
+    }, 5000) // Increased to 5 seconds to see animation better
     
     return () => clearInterval(timer)
   }, [sortedRewards.length])
@@ -326,46 +326,97 @@ export default function Home() {
         />
       </div>
 
-      {/* New Simple Carousel */}
+      {/* 3D Carousel with 5 Cards - Enhanced with Framer Motion */}
       {sortedRewards.length > 0 && (
         <div className="w-full py-12 overflow-hidden relative z-10">
-          <div className="relative h-96 flex items-center justify-center" style={{ perspective: '1200px' }}>
-            {[...Array(5)].map((_, i) => {
-              const index = (currentSlide + i) % sortedRewards.length
-              const reward = sortedRewards[index]
-              const position = i - 2 // -2, -1, 0, 1, 2
-              const isCenter = position === 0
-              
-              return (
-                <div
-                  key={i}
-                  className="absolute"
-                  style={{
-                    transform: `translateX(${position * 300}px) scale(${isCenter ? 1.1 : 0.8})`,
-                    opacity: Math.abs(position) > 2 ? 0 : isCenter ? 1 : 0.6,
-                    zIndex: isCenter ? 10 : 5 - Math.abs(position),
-                    transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-                  }}
-                >
-                  <div className="w-64 h-96 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900">
-                    <div className="h-3/4 relative">
-                      <img
-                        src={reward.image_url || '/placeholder.png'}
-                        alt={reward.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="h-1/4 bg-gradient-to-br from-[#0099ff] via-[#0066cc] to-[#0044aa] p-4 flex flex-col justify-center">
-                      <h3 className="text-white font-bold text-base truncate">{reward.name}</h3>
-                      <p className="text-cyan-200 text-sm flex items-center gap-1">
-                        <img src="/Pts 1.png" alt="Points" className="w-4 h-4" />
-                        {reward.points.toLocaleString()} Pts
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+          <div className="relative h-[480px] flex items-center justify-center">
+            <AnimatePresence mode="popLayout">
+              {[...Array(5)].map((_, i) => {
+                const index = (currentSlide + i) % sortedRewards.length
+                const reward = sortedRewards[index]
+                const position = i - 2 // -2, -1, 0, 1, 2 (left2, left1, center, right1, right2)
+                const isCenter = position === 0
+                
+                // Calculate transform values
+                const translateX = position * 280 // Horizontal spacing
+                const scale = isCenter ? 1 : 0.75 // Center card is larger
+                const opacity = isCenter ? 1 : 0.5 // Center card is fully visible
+                const zIndex = isCenter ? 20 : 10 - Math.abs(position)
+                const rotateY = position * 15 // Add 3D rotation effect
+                
+                return (
+                  <motion.div
+                    key={`${reward.id}-${currentSlide}-${i}`}
+                    className="absolute cursor-pointer"
+                    initial={{ 
+                      x: translateX + 100, 
+                      scale: scale * 0.8, 
+                      opacity: 0,
+                      rotateY: rotateY + 20
+                    }}
+                    animate={{ 
+                      x: translateX, 
+                      scale: scale, 
+                      opacity: opacity,
+                      rotateY: rotateY,
+                      zIndex: zIndex
+                    }}
+                    exit={{ 
+                      x: translateX - 100, 
+                      scale: scale * 0.8, 
+                      opacity: 0,
+                      rotateY: rotateY - 20
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      ease: [0.32, 0.72, 0, 1], // Custom easing for smooth motion
+                      scale: { duration: 0.4 },
+                      opacity: { duration: 0.3 }
+                    }}
+                    whileHover={isCenter ? { 
+                      scale: 1.05,
+                      rotateY: 0,
+                      transition: { duration: 0.3 }
+                    } : {}}
+                    onClick={() => isCenter && setSelectedReward(reward)}
+                    style={{
+                      zIndex: zIndex,
+                      perspective: 1000,
+                    }}
+                  >
+                    <motion.div 
+                      className="w-64 h-96 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-700 to-gray-800 border-2 border-blue-400"
+                      style={{
+                        transformStyle: 'preserve-3d',
+                      }}
+                    >
+                      <div className="h-[75%] relative bg-gray-600">
+                        <img
+                          src={reward.image_url || reward.image || '/placeholder.png'}
+                          alt={reward.name}
+                          className="w-full h-full object-cover"
+                        />
+                        {isCenter && (
+                          <motion.div 
+                            className="absolute inset-0 bg-gradient-to-t from-blue-600/30 to-transparent"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        )}
+                      </div>
+                      <div className="h-[25%] bg-gradient-to-br from-[#0066cc] to-[#0044aa] p-4 flex flex-col justify-center">
+                        <h3 className="text-white font-bold text-base truncate">{reward.name}</h3>
+                        <p className="text-yellow-300 text-sm flex items-center gap-1 mt-1">
+                          <img src="/Pts 1.png" alt="Points" className="w-4 h-4" />
+                          {reward.points.toLocaleString()} Pts
+                        </p>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
           </div>
         </div>
       )}
