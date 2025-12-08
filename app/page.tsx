@@ -259,6 +259,31 @@ export default function Home() {
   // Mobile filter drawer state
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
+  // Auto-scroll carousel every 3 seconds
+  useEffect(() => {
+    if (sortedRewards.length === 0) return
+
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => prev + 1)
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [sortedRewards.length])
+
+  // Reset position seamlessly when reaching end of middle set
+  useEffect(() => {
+    if (sortedRewards.length === 0) return
+    
+    const carouselLength = sortedRewards.length
+    
+    // When we reach the end of the second set, instantly jump to start of second set
+    if (currentSlide >= carouselLength * 2) {
+      setTimeout(() => {
+        setCurrentSlide(carouselLength)
+      }, 800) // Wait for transition to complete
+    }
+  }, [currentSlide, sortedRewards.length])
+
   return (
     <div className="min-h-screen text-white flex flex-col overflow-visible relative">
       {/* Background Image */}
@@ -314,35 +339,44 @@ export default function Home() {
           className="w-full h-auto object-cover"
         />
       </div>
+      
       {/* 3D Perspective Carousel */}
       <div className="w-full py-8 sm:py-12 overflow-hidden relative z-10" style={{ perspective: '1200px' }}>
-        <div className="relative h-64 sm:h-80 md:h-96 flex items-center justify-center">
-          {/* Render all reward cards with 3D positioning */}
-          {sortedRewards.slice(0, 5).map((reward, index) => {
+        <div className="relative h-64 sm:h-80 md:h-96 w-full flex items-center justify-center">
+          {/* Render rewards multiple times for infinite loop */}
+          {sortedRewards.length > 0 && [...sortedRewards, ...sortedRewards, ...sortedRewards].map((reward, index) => {
+            const carouselLength = sortedRewards.length
+            const actualIndex = index % carouselLength
+            
+            // Calculate position relative to current slide
             const position = index - currentSlide
             const isCenter = position === 0
             const absPosition = Math.abs(position)
             
+            // Only render cards that are close to the current view
+            if (absPosition > 3) return null
+            
             // Calculate transforms for 3D carousel effect
             const translateX = position * 280 // Horizontal spacing
-            const translateZ = isCenter ? 0 : -150 - (absPosition - 1) * 50 // Depth
-            const scale = isCenter ? 1 : 0.85 - (absPosition - 1) * 0.1 // Scale
-            const opacity = absPosition > 2 ? 0 : isCenter ? 1 : 0.6 // Visibility
+            const translateZ = isCenter ? 0 : -150 - (absPosition - 1) * 50 // Depth - push back side cards
             const rotateY = position * -15 // Slight rotation
+            const scale = isCenter ? 1 : Math.max(0.6, 0.85 - (absPosition - 1) * 0.1) // Scale
+            const opacity = absPosition > 2 ? 0 : isCenter ? 1 : 0.5 // Visibility - fade in/out at edges
             
             const tierStyles = getTierStyles(getTier(reward.points, reward.name))
             
             return (
               <div
-                key={reward.id}
-                className="absolute transition-all duration-500 ease-out cursor-pointer"
+                key={`carousel-${reward.id}-${index}`}
+                className="absolute cursor-pointer"
                 style={{
                   transform: `translateX(${translateX}px) translateZ(${translateZ}px) scale(${scale}) rotateY(${rotateY}deg)`,
                   opacity: opacity,
                   zIndex: isCenter ? 10 : 5 - absPosition,
-                  pointerEvents: absPosition > 2 ? 'none' : 'auto'
+                  pointerEvents: 'none',
+                  transition: 'all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1)',
+                  transformStyle: 'preserve-3d'
                 }}
-                onClick={() => setCurrentSlide(index)}
               >
                 {/* Card */}
                 <div 
@@ -361,9 +395,8 @@ export default function Home() {
                     />
                   </div>
                   
-                  {/* Info Footer with Blue Gradient - Matching reference */}
+                  {/* Info Footer with Blue Gradient */}
                   <div className="h-1/4 bg-gradient-to-br from-[#0099ff] via-[#0066cc] to-[#0044aa] p-4 flex flex-col justify-center relative overflow-hidden">
-                    {/* Subtle shine effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
                     <h3 className="text-white font-bold text-sm sm:text-base truncate relative z-10">
                       {reward.name}
@@ -378,43 +411,8 @@ export default function Home() {
             )
           })}
         </div>
-        
-        {/* Navigation Dots */}
-        <div className="flex justify-center gap-2 mt-6">
-          {sortedRewards.slice(0, 5).map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                currentSlide === index 
-                  ? 'bg-yellow-400 w-8' 
-                  : 'bg-gray-500 hover:bg-gray-400'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
-        
-        {/* Navigation Arrows */}
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev > 0 ? prev - 1 : sortedRewards.slice(0, 5).length - 1))}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
-          aria-label="Previous slide"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev < sortedRewards.slice(0, 5).length - 1 ? prev + 1 : 0))}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
-          aria-label="Next slide"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
       </div>
+      
       {/* Mobile Filter Drawer */}
       {mobileFiltersOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
