@@ -339,11 +339,12 @@ export default function Home() {
               return (
                 <div
                   key={i}
-                  className="absolute transition-all duration-700 ease-out"
+                  className="absolute"
                   style={{
                     transform: `translateX(${position * 300}px) scale(${isCenter ? 1.1 : 0.8})`,
                     opacity: Math.abs(position) > 2 ? 0 : isCenter ? 1 : 0.6,
-                    zIndex: isCenter ? 10 : 5 - Math.abs(position)
+                    zIndex: isCenter ? 10 : 5 - Math.abs(position),
+                    transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
                   }}
                 >
                   <div className="w-64 h-96 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900">
