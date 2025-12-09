@@ -333,7 +333,7 @@ export default function Home() {
         <div className="w-full relative">
           <div className="relative h-32 sm:h-48 md:h-64 overflow-hidden flex items-center justify-center">
             <img 
-              src="/bannertop.png" 
+              src="/Bannertop.png" 
               alt="Banner" 
               className="w-full h-full object-cover"
             />
