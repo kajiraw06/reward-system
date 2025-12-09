@@ -13,6 +13,7 @@
     "dotenv": "^17.2.3",
     "framer-motion": "^12.23.25",
     "next": "^16.1.0-canary.13",
+    "rc-slider": "^11.1.9",
     "react": "^18",
     "react-dom": "^18"
   },

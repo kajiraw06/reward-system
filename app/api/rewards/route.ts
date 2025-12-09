@@ -64,6 +64,7 @@ export async function GET() {
           points: reward.points,
           category: reward.category,
           quantity: availableQuantity,
+          tier: reward.tier || 'bronze',
           variants: variantOptions.length > 0 ? {
             type: reward.variant_type,
             options: variantOptions

@@ -12,6 +12,7 @@ CREATE TABLE rewards (
   category VARCHAR(100) NOT NULL,
   quantity INTEGER NOT NULL DEFAULT 0,
   variant_type VARCHAR(100),
+  tier VARCHAR(50) DEFAULT 'bronze' CHECK (tier IN ('black-diamond', 'diamond', 'gold', 'silver', 'bronze')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

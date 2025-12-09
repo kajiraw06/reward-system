@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
       points: reward.points,
       category: reward.category,
       quantity: reward.quantity,
+      tier: reward.tier || 'bronze',
       variants: {
         type: reward.variant_type || 'color',
         options: reward.variants?.map((v: any) => v.option_name) || []
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, name, points, category, quantity, variantType, variantOptions, galleries } = body
+    const { id, name, points, category, quantity, variantType, variantOptions, tier, galleries } = body
 
     // Validate reward ID
     if (!id) {
@@ -106,6 +107,7 @@ export async function PATCH(request: NextRequest) {
         category: validatedData.category,
         quantity: validatedData.quantity,
         variant_type: validatedData.variantType,
+        tier: tier || 'bronze',
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -263,6 +265,7 @@ export async function DELETE(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const { tier } = body
     
     // Validate reward data
     const validatedData = validateRewardInput(body)
@@ -286,7 +289,8 @@ export async function POST(request: NextRequest) {
         points: validatedData.points,
         category: validatedData.category,
         quantity: validatedData.quantity,
-        variant_type: validatedData.variantType
+        variant_type: validatedData.variantType,
+        tier: tier || 'bronze'
       })
       .select()
       .single()

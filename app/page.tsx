@@ -1,7 +1,11 @@
+
 "use client"
 import Image from 'next/image'
 import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import dynamic from 'next/dynamic'
+
+const PointsRangeSlider = dynamic(() => import('./PointsRangeSlider'), { ssr: false })
 
 const basePath = '' // Removed basePath for local development with API routes
 
@@ -37,19 +41,23 @@ export default function Home() {
   const [checkClaimId, setCheckClaimId] = useState('')
   const [isChecking, setIsChecking] = useState(false)
   const [claimStatus, setClaimStatus] = useState<{status: string, color: string, message: string} | null>(null)
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [userPoints, setUserPoints] = useState(500000) // User's current points
+  const [carouselIndex, setCarouselIndex] = useState(0)
+
+  // Preload tier background images
+  useEffect(() => {
+    const tiers = ['diamond', 'black-diamond'];
+    tiers.forEach(tier => {
+      const img = new window.Image();
+      img.src = `/${tier}.png`;
+    });
+  }, []);
 
   // Fetch rewards from database
   useEffect(() => {
     const fetchRewards = async () => {
       try {
         const response = await fetch('/api/rewards')
-        const result = await response.json()
-        
-        // Handle new API response format with success/data structure
-        const data = result.success ? result.data : result
-        
+        const data = await response.json()
         setRewards(data)
         
         // Update points range based on fetched rewards
@@ -70,6 +78,25 @@ export default function Home() {
     fetchRewards()
   }, [])
 
+  // Memoize filtered carousel rewards (diamond and black-diamond only)
+  const carouselRewards = useMemo(() => {
+    return rewards
+      .filter((item: any) => {
+        const tier = (item as any).tier || getTier(item.points, item.name);
+        return tier === 'diamond' || tier === 'black-diamond';
+      })
+      .slice(0, 10);
+  }, [rewards]);
+
+  // Auto-advance carousel every 5 seconds (right to left movement)
+  useEffect(() => {
+    if (carouselRewards.length === 0) return;
+    const interval = setInterval(() => {
+      setCarouselIndex((prev) => (prev - 1 + carouselRewards.length) % carouselRewards.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [carouselRewards.length])
+
   // Reset gallery image and variant when popup opens
   useEffect(() => {
     if (selectedReward) {
@@ -86,11 +113,11 @@ export default function Home() {
       return 'black-diamond'
     }
     // Diamond: Rolex, high-end watches - 75k-200k points
-    if (points >= 75000 || itemName.toLowerCase().includes('rolex')) {
+    if (points >= 75000 || itemName.toLowerCase().includes('rolex') || itemName.toLowerCase().includes('watch')) {
       return 'diamond'
     }
-    // Gold: iPhone, MacBook, iPad - 25k-75k points
-    if (points >= 25000 || itemName.toLowerCase().includes('iphone') || itemName.toLowerCase().includes('macbook') || itemName.toLowerCase().includes('ipad')) {
+    // Gold: iPhone, MacBook - 25k-75k points
+    if (points >= 25000 || itemName.toLowerCase().includes('iphone') || itemName.toLowerCase().includes('macbook')) {
       return 'gold'
     }
     // Silver: Mid-range gadgets, GCash - 500-25k points
@@ -136,75 +163,85 @@ export default function Home() {
     return filtered
   }, [rewards, searchQuery, categoryFilter, tierFilter, pointsRange, sortOrder])
 
-  const getTierStyles = (tier: string) => {
+  const getTierStyles = useMemo(() => (tier: string) => {
     switch (tier) {
       case 'black-diamond':
         return {
-          borderColor: '#c084fc',
+          borderColor: '#8b5cf6',
           animation: 'blackDiamondGlow 2s ease-in-out infinite',
           className: 'tier-black-diamond',
-          textColor: 'text-white',
-          pointsColor: 'text-yellow-300',
-          buttonBg: 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 hover:from-purple-500 hover:via-pink-500 hover:to-purple-600 text-white font-bold uppercase tracking-wider shadow-2xl border-2 border-pink-400',
-          tierLabel: '💎 BLACK DIAMOND',
-          tierLabelBg: 'bg-gradient-to-r from-purple-900 via-pink-900 to-black',
-          cardBg: 'bg-gradient-to-br from-[#1a0033] via-[#4a0e4e] to-[#0a001a]', // Deep purple/black cosmic gradient
-          imageOverlay: 'bg-gradient-to-br from-purple-600/30 via-pink-500/20 to-violet-600/30' // Vibrant cosmic overlay
+          textColor: 'text-purple-300',
+          pointsColor: 'text-purple-400',
+          buttonBg: 'bg-purple-600 hover:bg-purple-700 text-white',
+          buttonColor: '#8b5cf6',
+          buttonBorderColor: '#c084fc',
+          tierLabel: 'BLACK DIAMOND',
+          tierLabelBg: 'bg-gradient-to-r from-purple-900 to-black',
+          bannerColor: '#8b5cf6',
+          bannerGlow: '0 0 20px rgba(139, 92, 246, 0.7), 0 0 40px rgba(139, 92, 246, 0.4)'
         }
       case 'diamond':
         return {
-          borderColor: '#a78bfa',
+          borderColor: '#6366f1',
           animation: 'diamondSparkle 2s ease-in-out infinite',
           className: 'tier-diamond',
-          textColor: 'text-white',
-          pointsColor: 'text-yellow-400',
-          buttonBg: 'bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white font-bold uppercase tracking-wider shadow-lg border-2 border-purple-400',
+          textColor: 'text-gray-800',
+          pointsColor: 'text-purple-600',
+          buttonBg: 'bg-gray-800 hover:bg-gray-900 text-white',
+          buttonColor: '#6366f1',
+          buttonBorderColor: '#818cf8',
           tierLabel: '💠 DIAMOND',
           tierLabelBg: 'bg-gradient-to-r from-indigo-600 to-purple-600',
-          cardBg: 'bg-gradient-to-b from-[#2D1E44] to-[#67219D]', // Diamond gradient background
-          imageOverlay: 'bg-gradient-to-br from-purple-400/20 via-violet-500/30 to-blue-500/20' // Cosmic light rays overlay
+          bannerColor: '#6366f1',
+          bannerGlow: '0 0 20px rgba(99, 102, 241, 0.7), 0 0 40px rgba(99, 102, 241, 0.4)'
         }
       case 'gold':
         return {
           borderColor: '#ffd700',
           animation: 'goldGlow 2s ease-in-out infinite',
           className: 'tier-gold',
-          textColor: 'text-white',
-          pointsColor: 'text-yellow-400',
-          buttonBg: 'bg-gradient-to-b from-[#d4af37] to-[#b8941e] hover:from-[#e0c050] hover:to-[#c9a530] text-white font-bold uppercase tracking-wider shadow-lg border-2 border-yellow-300',
+          textColor: 'text-yellow-900',
+          pointsColor: 'text-yellow-800',
+          buttonBg: 'bg-black hover:bg-gray-800 text-yellow-400',
+          buttonColor: '#ffd700',
+          buttonBorderColor: '#fde047',
           tierLabel: 'GOLD',
           tierLabelBg: 'bg-gradient-to-r from-yellow-500 to-yellow-600',
-          cardBg: 'bg-gradient-to-b from-[#FCDB6A] to-[#A66F08]', // Gold gradient background
-          imageOverlay: 'bg-gradient-to-br from-yellow-400/20 via-yellow-600/30 to-yellow-800/20' // Gold light rays
+          bannerColor: '#ffd700',
+          bannerGlow: '0 0 20px rgba(255, 215, 0, 0.7), 0 0 40px rgba(255, 215, 0, 0.4)'
         }
       case 'silver':
         return {
-          borderColor: '#c0c0c0',
+          borderColor: '#a8a8a8',
           animation: 'silverShine 3s ease-in-out infinite',
           className: 'tier-silver',
-          textColor: 'text-white',
-          pointsColor: 'text-yellow-400',
-          buttonBg: 'bg-gradient-to-b from-[#b8b8b8] to-[#8a8a8a] hover:from-[#c8c8c8] hover:to-[#9a9a9a] text-white font-bold uppercase tracking-wider shadow-lg border-2 border-gray-300',
+          textColor: 'text-gray-800',
+          pointsColor: 'text-gray-700',
+          buttonBg: 'bg-gray-700 hover:bg-gray-800 text-white',
+          buttonColor: '#9ca3af',
+          buttonBorderColor: '#d1d5db',
           tierLabel: 'SILVER',
           tierLabelBg: 'bg-gradient-to-r from-gray-400 to-gray-500',
-          cardBg: 'bg-gradient-to-b from-[#E9E9EB] to-[#494A4E]', // Silver gradient background
-          imageOverlay: 'bg-gradient-to-br from-gray-300/20 via-gray-400/30 to-gray-600/20' // Silver light rays
+          bannerColor: '#9ca3af',
+          bannerGlow: '0 0 20px rgba(156, 163, 175, 0.8), 0 0 40px rgba(156, 163, 175, 0.5)'
         }
       default: // bronze
         return {
           borderColor: '#cd7f32',
           animation: 'bronzeMatte 3s ease-in-out infinite',
           className: 'tier-bronze',
-          textColor: 'text-white',
-          pointsColor: 'text-yellow-400',
-          buttonBg: 'bg-gradient-to-b from-[#b8860b] to-[#8b6914] hover:from-[#c89615] hover:to-[#9b7a1a] text-white font-bold uppercase tracking-wider shadow-lg border-2 border-yellow-600',
+          textColor: 'text-yellow-100',
+          pointsColor: 'text-yellow-200',
+          buttonBg: 'bg-yellow-900 hover:bg-yellow-800 text-yellow-100',
+          buttonColor: '#cd7f32',
+          buttonBorderColor: '#fb923c',
           tierLabel: 'BRONZE',
           tierLabelBg: 'bg-gradient-to-r from-amber-700 to-amber-800',
-          cardBg: 'bg-gradient-to-b from-[#C97D03] to-[#2B1807]', // Bronze gradient background
-          imageOverlay: 'bg-gradient-to-br from-amber-700/20 via-amber-900/30 to-yellow-900/20' // Bronze light rays
+          bannerColor: '#cd7f32',
+          bannerGlow: '0 0 20px rgba(205, 127, 50, 0.7), 0 0 40px rgba(205, 127, 50, 0.4)'
         }
     }
-  }
+  }, [])
 
   // Reset to page 1 when filter changes
   const totalPages = Math.ceil(sortedRewards.length / ITEMS_PER_PAGE)
@@ -263,55 +300,24 @@ export default function Home() {
   // Mobile filter drawer state
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
-  // Auto-scroll carousel
-  useEffect(() => {
-    if (sortedRewards.length === 0) return
-    
-    const timer = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % sortedRewards.length)
-    }, 5000) // Increased to 5 seconds to see animation better
-    
-    return () => clearInterval(timer)
-  }, [sortedRewards.length])
-
   return (
-    <div className="min-h-screen text-white flex flex-col overflow-visible relative">
-      {/* Background Image */}
-      <div 
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/Rectangle 22.png')" }}
-      />
-      {/* Header - Matching new design */}
-      <header className="w-full px-4 sm:px-8 py-3 flex items-center justify-between shadow-lg relative z-10" style={{ background: 'linear-gradient(180deg, rgba(13, 31, 53, 0.95) 0%, rgba(10, 22, 40, 0.9) 100%)', borderBottom: '1px solid rgba(30, 58, 77, 0.3)' }}>
-        {/* Logo */}
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col overflow-visible">
+      {/* Header */}
+      <header className="w-full bg-gray-800 px-4 sm:px-8 py-3 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-4">
-          <img src="/Time2Claim 1.png" alt="Time2Claim Logo" className="w-32 sm:w-[180px]" />
+          <img src="/Time2Claim.png" alt="Time2Claim Logo" className="w-24 sm:w-[140px]" />
         </div>
-        
-        {/* Right side - Welcome message and Earn Points button */}
-        <div className="flex items-center gap-3 sm:gap-6">
-          {/* Welcome message with user icon */}
-          <div className="hidden sm:flex items-center gap-2 text-gray-300">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-            </svg>
-            <span className="text-sm">Welcome, Warren!</span>
-          </div>
-          
-          {/* Earn More Points button */}
+        <div className="flex items-center gap-2 sm:gap-6">
+          {/* Claims Checker button */}
           <button 
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black rounded-lg font-semibold text-sm transition-all shadow-lg"
+            className="px-3 sm:px-4 py-2 text-white rounded-lg font-semibold text-sm transition border-2"
+            style={{ background: 'linear-gradient(135deg, #FF7901 0%, #FFA323 100%)', borderColor: '#FFA323', boxShadow: 'none' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, #E66D01 0%, #E69320 100%)'; e.currentTarget.style.boxShadow = '0 0 12px #FFA323, 0 0 24px #FFA323'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, #FF7901 0%, #FFA323 100%)'; e.currentTarget.style.boxShadow = 'none'; }}
             onClick={() => setShowClaimsChecker(true)}
           >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-            <span className="hidden sm:inline">Earn More Points</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            Claims Checker
           </button>
-          
           {/* Mobile filter button */}
           <button 
             className="md:hidden px-3 py-2 bg-yellow-500 text-black rounded-lg font-semibold text-sm"
@@ -321,245 +327,218 @@ export default function Home() {
           </button>
         </div>
       </header>
-      {/* Hero Banner - Static at top */}
-      <div className="w-full relative z-10">
-        <img 
-          src="/claim-reward-banner.png" 
-          alt="Claim Your Reward Today - Time2Claim" 
-          className="w-full h-auto object-cover"
+      {/* Banner Section */}
+      <div className="w-full bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 overflow-visible flex flex-col items-center relative pb-0">
+        {/* Banner Image */}
+        <div className="w-full relative">
+          <div className="relative h-32 sm:h-48 md:h-64 overflow-hidden flex items-center justify-center">
+            <img 
+              src="/Bannertop.png" 
+              alt="Banner" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Divider with Glow - Positioned between banner and carousel */}
+      <div className="w-full flex justify-center relative z-20" style={{ marginTop: '-2px', marginBottom: '-2px' }}>
+        <div 
+          className="h-1 rounded-full"
+          style={{
+            width: '55%',
+            backgroundColor: '#69E8F8',
+            boxShadow: '0 0 10px #69E8F8, 0 0 20px #69E8F8, 0 0 30px #69E8F8'
+          }}
         />
       </div>
 
-      {/* 3D Carousel with 5 Cards - SUPER ENHANCED VERSION */}
-      {sortedRewards.length > 0 && (
-        <div className="w-full py-16 overflow-hidden relative z-10">
-          {/* Background glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-900/10 to-transparent pointer-events-none" />
-          
-          {/* Carousel Title */}
-          <motion.h2 
-            className="text-center text-4xl font-bold mb-8 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            Featured Rewards
-          </motion.h2>
-          
-          <div className="relative h-[500px] flex items-center justify-center">
-            {/* Center spotlight effect */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-80 h-[500px] bg-gradient-radial from-blue-500/20 via-purple-500/10 to-transparent blur-3xl" />
-            </div>
-            
-            <AnimatePresence mode="popLayout">
-              {[...Array(5)].map((_, i) => {
-                const index = (currentSlide + i) % sortedRewards.length
-                const reward = sortedRewards[index]
-                const position = i - 2 // -2, -1, 0, 1, 2
-                const isCenter = position === 0
-                const tier = getTier(reward.points, reward.name)
-                
-                // Enhanced transform values
-                const translateX = position * 320
-                const translateZ = isCenter ? 50 : -100
-                const scale = isCenter ? 1.1 : 0.7
-                const opacity = isCenter ? 1 : Math.max(0.3, 0.7 - Math.abs(position) * 0.2)
-                const zIndex = isCenter ? 30 : 20 - Math.abs(position) * 5
-                const rotateY = position * 25
-                const blur = isCenter ? 0 : Math.abs(position) * 2
-                
-                // Tier-based colors
-                const tierColors = {
-                  'black-diamond': { from: '#9333ea', to: '#ec4899', glow: 'rgba(147, 51, 234, 0.4)' },
-                  'diamond': { from: '#8b5cf6', to: '#a78bfa', glow: 'rgba(139, 92, 246, 0.4)' },
-                  'gold': { from: '#fbbf24', to: '#f59e0b', glow: 'rgba(251, 191, 36, 0.4)' },
-                  'silver': { from: '#d1d5db', to: '#9ca3af', glow: 'rgba(209, 213, 219, 0.4)' },
-                  'bronze': { from: '#d97706', to: '#92400e', glow: 'rgba(217, 119, 6, 0.4)' }
-                }
-                
-                const colors = tierColors[tier as keyof typeof tierColors] || tierColors.silver
-                
-                return (
-                  <motion.div
-                    key={`${reward.id}-${currentSlide}-${i}`}
-                    className="absolute cursor-pointer"
-                    initial={{ 
-                      x: translateX + 150, 
-                      scale: scale * 0.5, 
-                      opacity: 0,
-                      rotateY: rotateY + 30,
-                      z: translateZ - 50
-                    }}
-                    animate={{ 
-                      x: translateX, 
-                      scale: scale, 
-                      opacity: opacity,
-                      rotateY: rotateY,
-                      z: translateZ,
-                      zIndex: zIndex,
-                      filter: `blur(${blur}px)`
-                    }}
-                    exit={{ 
-                      x: translateX - 150, 
-                      scale: scale * 0.5, 
-                      opacity: 0,
-                      rotateY: rotateY - 30,
-                      z: translateZ - 50
-                    }}
-                    transition={{
-                      duration: 0.8,
-                      ease: [0.25, 0.1, 0.25, 1],
-                      scale: { duration: 0.5 },
-                      opacity: { duration: 0.4 }
-                    }}
-                    whileHover={isCenter ? { 
-                      scale: 1.15,
-                      rotateY: 0,
-                      y: -10,
-                      transition: { duration: 0.3 }
-                    } : {}}
-                    onClick={() => isCenter && setSelectedReward(reward)}
-                    style={{
-                      zIndex: zIndex,
-                      perspective: 1500,
-                      transformStyle: 'preserve-3d',
-                    }}
-                  >
-                    <motion.div 
-                      className="w-72 h-[450px] rounded-3xl overflow-hidden shadow-2xl relative"
+      {/* Featured Rewards Carousel - Stacked Card Style */}
+      <div className="w-full bg-gradient-to-b from-gray-800 to-gray-900 py-0 px-4 overflow-hidden">
+        <div className="relative max-w-6xl mx-auto h-[500px] flex items-center justify-center">
+          {carouselRewards.map((item: any, idx: number) => {
+              const tier = (item as any).tier || getTier(item.points, item.name)
+              const tierStyles = getTierStyles(tier)
+              const availableStock = (item as any).available_stock ?? 999
+              const isOutOfStock = availableStock === 0
+              const isLastOne = availableStock === 1
+
+              // Calculate position relative to center card
+              const position = (idx - carouselIndex + carouselRewards.length) % carouselRewards.length
+              const adjustedPos = position > carouselRewards.length / 2 ? position - carouselRewards.length : position
+
+              // Only show 5 cards: -2, -1, 0, 1, 2
+              if (adjustedPos < -2 || adjustedPos > 2) return null
+
+              // Calculate scale and position based on distance from center
+              let scale = 1
+              let zIndex = 50
+              let opacity = 1
+              let translateX = 0
+
+              if (adjustedPos === 0) {
+                // Center card - large
+                scale = 1
+                zIndex = 50
+                opacity = 1
+                translateX = 0
+              } else if (adjustedPos === -1 || adjustedPos === 1) {
+                // Adjacent cards - medium
+                scale = 0.75
+                zIndex = 40
+                opacity = 0.8
+                translateX = adjustedPos * 250
+              } else if (adjustedPos === -2 || adjustedPos === 2) {
+                // Outer cards - small
+                scale = 0.5
+                zIndex = 30
+                opacity = 0.5
+                translateX = adjustedPos * 215
+              }
+
+              return (
+                <motion.div
+                key={item.id}
+                className="absolute"
+                initial={{ 
+                  scale: 0.5,
+                  opacity: 0,
+                  y: 50,
+                  rotateY: -30
+                }}
+                animate={{
+                  scale,
+                  x: translateX,
+                  opacity,
+                  zIndex,
+                  y: 0,
+                  rotateY: 0
+                }}
+                transition={{
+                  duration: 1.2,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  delay: idx * 0.08
+                }}
+                style={{ width: '280px', willChange: adjustedPos >= -1 && adjustedPos <= 1 ? 'transform, opacity' : 'auto' }}
+              >
+                <div className="relative group h-full">
+                  {/* Stock Banners */}
+                  {availableStock > 1 && availableStock <= 10 && (
+                    <div className="absolute top-0 -right-5 text-white text-center py-1 px-3 rounded-xl font-bold text-sm z-10 pointer-events-none select-none"
+                      style={{ 
+                        transform: 'rotate(20deg)',
+                        backgroundColor: tierStyles.bannerColor,
+                        boxShadow: tierStyles.bannerGlow
+                      }}>
+                      Only {availableStock} Left!
+                    </div>
+                  )}
+                  
+                  {isLastOne && (
+                    <div className="absolute top-0 -right-5 text-white text-center py-1 px-3 rounded-xl font-bold text-sm z-10 pointer-events-none select-none"
+                      style={{ 
+                        transform: 'rotate(20deg)',
+                        backgroundColor: tierStyles.bannerColor,
+                        boxShadow: tierStyles.bannerGlow
+                      }}>
+                      Last One!
+                    </div>
+                  )}
+                  
+                  {isOutOfStock && (
+                    <div className="absolute inset-0 bg-black/80 rounded-2xl flex items-center justify-center z-50 select-none">
+                      <div className="text-white font-extrabold text-2xl text-center">
+                        OUT OF<br />STOCK
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="transition-all duration-200 h-full" style={{aspectRatio: '1180/1756'}}>
+                    <div 
+                      className={`relative flex flex-col items-center justify-end shadow-2xl border-2 transition-all duration-200 w-full h-full overflow-hidden ${tierStyles.className}`}
                       style={{
-                        transformStyle: 'preserve-3d',
-                        background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
-                        boxShadow: isCenter 
-                          ? `0 25px 60px ${colors.glow}, 0 0 50px ${colors.glow}`
-                          : `0 15px 35px rgba(0,0,0,0.3)`,
+                        borderRadius: '10px',
+                        borderColor: tierStyles.borderColor,
+                        backgroundImage: `url(/${tier}.png)`,
+                        backgroundSize: '100% 100%',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        ...(adjustedPos === 0 ? {
+                          boxShadow: `0 0 30px ${tierStyles.borderColor}ee, 0 0 60px ${tierStyles.borderColor}88, 0 0 90px ${tierStyles.borderColor}44`
+                        } : {})
                       }}
-                      animate={isCenter ? {
-                        boxShadow: [
-                          `0 25px 60px ${colors.glow}, 0 0 50px ${colors.glow}`,
-                          `0 30px 70px ${colors.glow}, 0 0 60px ${colors.glow}`,
-                          `0 25px 60px ${colors.glow}, 0 0 50px ${colors.glow}`,
-                        ]
-                      } : {}}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      {/* Animated border */}
-                      {isCenter && (
-                        <motion.div 
-                          className="absolute inset-0 rounded-3xl"
+                      {isLastOne && adjustedPos !== 0 && (
+                        <div 
+                          className="absolute inset-[-2px] border-2 rounded-[10px] pointer-events-none z-50"
                           style={{
-                            background: `linear-gradient(45deg, ${colors.from}, transparent, ${colors.to})`,
-                            backgroundSize: '200% 200%',
+                            borderColor: tierStyles.bannerColor,
+                            boxShadow: tierStyles.bannerGlow,
                           }}
-                          animate={{
-                            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                          }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                         />
                       )}
                       
-                      {/* Image section */}
-                      <div className="h-[70%] relative overflow-hidden">
-                        <motion.img
-                          src={reward.image_url || reward.image || '/placeholder.png'}
-                          alt={reward.name}
-                          className="w-full h-full object-cover"
-                          animate={isCenter ? {
-                            scale: [1, 1.05, 1],
-                          } : {}}
-                          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        />
-                        
-                        {/* Shine effect on center card */}
-                        {isCenter && (
-                          <motion.div 
-                            className="absolute inset-0"
-                            style={{
-                              background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%)',
-                              backgroundSize: '200% 100%',
-                            }}
-                            animate={{
-                              backgroundPosition: ['200% 0', '-200% 0'],
-                            }}
-                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                          />
-                        )}
-                        
-                        {/* Tier badge */}
-                        <motion.div 
-                          className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md"
-                          style={{
-                            background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
-                            color: tier === 'gold' || tier === 'silver' ? '#000' : '#fff'
-                          }}
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{ delay: 0.3, type: "spring" }}
-                        >
-                          {tier === 'black-diamond' ? 'BLACK DIAMOND' : 
-                           tier === 'diamond' ? 'DIAMOND' :
-                           tier === 'gold' ? 'GOLD' :
-                           tier === 'silver' ? 'SILVER' : 'BRONZE'}
-                        </motion.div>
-                        
-                        {/* Gradient overlay */}
-                        <div 
-                          className="absolute inset-0"
-                          style={{
-                            background: `linear-gradient(to bottom, transparent 50%, ${colors.from}E6 100%)`
-                          }}
+                      <div className="w-full flex-1 px-3 pt-10 pb-3 flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={(item as any).image || `https://via.placeholder.com/300x200/333333/FFFFFF?text=${encodeURIComponent(item.name)}`}
+                          alt={item.name}
+                          className="w-full h-full object-cover rounded-xl"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                       
-                      {/* Info section */}
-                      <div className="h-[30%] p-5 flex flex-col justify-between relative z-10">
-                        <div>
-                          <motion.h3 
-                            className="text-white font-bold text-xl mb-2 line-clamp-2"
-                            animate={isCenter ? { y: [0, -2, 0] } : {}}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >
-                            {reward.name}
-                          </motion.h3>
-                          <div className="flex items-center gap-2">
-                            <motion.img 
-                              src="/Pts 1.png" 
-                              alt="Points" 
-                              className="w-6 h-6"
-                              animate={isCenter ? { rotate: [0, 360] } : {}}
-                              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            />
-                            <span className="text-yellow-300 font-bold text-lg">
-                              {reward.points.toLocaleString()} Pts
-                            </span>
-                          </div>
+                      <div className="px-3 pb-5 w-full flex flex-col gap-1 items-center">
+                        <div className="pl-3 font-extrabold text-lg text-left w-full text-white drop-shadow-lg">{item.name}</div>
+                        
+                        <div className="mb-0 pl-3 pb-5 text-left w-full flex items-center gap-2 font-medium text-white">
+                          <img src="/pts.png" alt="Points" className="w-6 h-6" />
+                          <span className="font-bold text-lg text-yellow-300">{item.points.toLocaleString()}</span>
                         </div>
                         
-                        {/* Center card gets a button */}
-                        {isCenter && (
-                          <motion.button
-                            className="w-full py-1.5 bg-white text-black font-bold rounded-lg hover:bg-yellow-300 transition-colors text-sm"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 }}
-                          >
-                            CLAIM NOW
-                          </motion.button>
-                        )}
+                        <motion.button
+                          type="button"
+                          className={`px-3 py-1.5 rounded-lg font-bold shadow transition mt-auto text-sm border-2 ${
+                            isOutOfStock ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : ''
+                          }`}
+                          style={{
+                            width: '60%',
+                            borderColor: isOutOfStock ? 'rgba(255, 255, 255, 0.2)' : tierStyles.buttonBorderColor,
+                            boxShadow: 'none',
+                            ...(isOutOfStock ? {} : {
+                              background: isLastOne 
+                                ? `linear-gradient(180deg, ${tierStyles.bannerColor} 0%, ${tierStyles.bannerColor}aa 100%)`
+                                : `linear-gradient(180deg, ${tierStyles.buttonColor} 0%, ${tierStyles.buttonColor}aa 100%)`,
+                              color: 'white'
+                            })
+                          }}
+                          onClick={() => !isOutOfStock && adjustedPos === 0 && setSelectedReward(item)}
+                          disabled={isOutOfStock || adjustedPos !== 0}
+                          whileHover={!isOutOfStock && adjustedPos === 0 ? { scale: 1.05 } : {}}
+                          whileTap={!isOutOfStock && adjustedPos === 0 ? { scale: 0.95 } : {}}
+                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                          onMouseEnter={e => {
+                            if (!isOutOfStock && adjustedPos === 0) {
+                              e.currentTarget.style.boxShadow = `0 0 12px ${tierStyles.buttonBorderColor}, 0 0 24px ${tierStyles.buttonBorderColor}`;
+                            }
+                          }}
+                          onMouseLeave={e => {
+                            if (!isOutOfStock && adjustedPos === 0) {
+                              e.currentTarget.style.boxShadow = 'none';
+                            }
+                          }}
+                        >
+                          {isOutOfStock ? 'OUT OF STOCK' : 'CLAIM NOW'}
+                        </motion.button>
                       </div>
-                      
-                    </motion.div>
-                  </motion.div>
-                )
-              })}
-            </AnimatePresence>
-          </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )
+          })}
         </div>
-      )}
-      
+      </div>
       {/* Mobile Filter Drawer */}
       {mobileFiltersOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
@@ -611,11 +590,23 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex flex-1 w-full overflow-visible relative z-10">
+      <div className="flex flex-1 w-full overflow-visible">
         {/* Sidebar - Active Filters (Desktop) */}
-        <aside className="hidden md:flex flex-col w-72 rounded-xl mx-8 my-4 p-6 shadow-lg border border-[#1e3a4d]/50" style={{ background: 'linear-gradient(180deg, #0d1f2d 0%, #0a1a28 50%, #071420 100%)' }}>
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white">Active Filters</h3>
+        <aside className="hidden md:flex flex-col w-72 bg-gray-800 rounded-xl mx-8 my-0 p-6 shadow-lg">
+          {/* Points Range Slider - Best UX */}
+          <div className="mb-6">
+            <PointsRangeSlider
+              min={MIN_POINTS}
+              max={MAX_POINTS}
+              value={pointsRange}
+              onChange={(val) => {
+                setPointsRange(val)
+                setCurrentPage(1)
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-yellow-400">Active Filters</h3>
             {activeFilterCount > 0 && (
               <button 
                 onClick={clearAllFilters}
@@ -625,110 +616,20 @@ export default function Home() {
               </button>
             )}
           </div>
-          
-          {/* Points Range Slider */}
-          <div className="mb-8 bg-[#0a1822]/60 rounded-xl p-4 border border-[#1e3a4d]/30">
-            <h4 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-              <img src="/Pts 1.png" alt="Points" className="w-5 h-5" /> Points Range
-            </h4>
-            <div className="space-y-3">
-              <div className="flex justify-between text-xs text-gray-400">
-                <span>{pointsRange[0].toLocaleString()}</span>
-                <span>{pointsRange[1].toLocaleString()}</span>
-              </div>
-              <div className="relative h-2">
-                {/* Track background */}
-                <div className="absolute inset-0 bg-[#1a2d3d] rounded-full"></div>
-                {/* Active track */}
-                <div 
-                  className="absolute h-full bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-full"
-                  style={{
-                    left: `${((pointsRange[0] - MIN_POINTS) / (MAX_POINTS - MIN_POINTS)) * 100}%`,
-                    right: `${100 - ((pointsRange[1] - MIN_POINTS) / (MAX_POINTS - MIN_POINTS)) * 100}%`
-                  }}
-                ></div>
-                <input
-                  type="range"
-                  min={MIN_POINTS}
-                  max={MAX_POINTS}
-                  value={pointsRange[0]}
-                  onChange={(e) => {
-                    const val = Number(e.target.value)
-                    if (val <= pointsRange[1]) {
-                      setPointsRange([val, pointsRange[1]])
-                      setCurrentPage(1)
-                    }
-                  }}
-                  className="absolute w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-yellow-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-yellow-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-yellow-500 [&::-moz-range-thumb]:cursor-pointer"
-                  style={{ zIndex: 2 }}
-                />
-                <input
-                  type="range"
-                  min={MIN_POINTS}
-                  max={MAX_POINTS}
-                  value={pointsRange[1]}
-                  onChange={(e) => {
-                    const val = Number(e.target.value)
-                    if (val >= pointsRange[0]) {
-                      setPointsRange([pointsRange[0], val])
-                      setCurrentPage(1)
-                    }
-                  }}
-                  className="absolute w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-cyan-300 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-cyan-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-cyan-300 [&::-moz-range-thumb]:cursor-pointer"
-                  style={{ zIndex: 3 }}
-                />
-              </div>
-              <div className="flex gap-2 mt-4">
-                <input
-                  type="number"
-                  value={pointsRange[0]}
-                  onChange={(e) => {
-                    const val = Number(e.target.value)
-                    if (val >= MIN_POINTS && val <= pointsRange[1]) {
-                      setPointsRange([val, pointsRange[1]])
-                      setCurrentPage(1)
-                    }
-                  }}
-                  className="w-1/2 px-3 py-2 text-sm bg-[#0a1822] border border-[#1e3a4d] rounded-lg text-white text-center focus:outline-none focus:border-yellow-500"
-                  placeholder="Min"
-                />
-                <input
-                  type="number"
-                  value={pointsRange[1]}
-                  onChange={(e) => {
-                    const val = Number(e.target.value)
-                    if (val <= MAX_POINTS && val >= pointsRange[0]) {
-                      setPointsRange([pointsRange[0], val])
-                      setCurrentPage(1)
-                    }
-                  }}
-                  className="w-1/2 px-3 py-2 text-sm bg-[#0a1822] border border-[#1e3a4d] rounded-lg text-white text-center focus:outline-none focus:border-yellow-500"
-                  placeholder="Max"
-                />
-              </div>
-            </div>
-          </div>
 
           {/* Category Filter */}
-          <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-400 mb-4">Category</h4>
+          <div className="mb-5">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Category</h4>
             <div className="space-y-1">
               {categories.map(cat => (
-                <label key={cat} className="flex items-center gap-3 cursor-pointer py-2 transition-all hover:text-white">
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${categoryFilter.includes(cat) ? 'bg-yellow-500 border-yellow-500' : 'bg-[#1a2d3d] border-[#2a4050]'}`}>
-                    {categoryFilter.includes(cat) && (
-                      <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
+                <label key={cat} className={`flex items-center gap-3 cursor-pointer px-3 py-2 rounded-lg transition-all ${categoryFilter.includes(cat) ? 'bg-yellow-500/10 border border-yellow-500/30' : 'hover:bg-gray-700/50'}`}>
                   <input
                     type="checkbox"
                     checked={categoryFilter.includes(cat)}
                     onChange={() => toggleCategoryFilter(cat)}
-                    className="hidden"
+                    className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-yellow-500 focus:ring-yellow-500 focus:ring-offset-0 cursor-pointer"
                   />
-                  <span className={`text-sm ${categoryFilter.includes(cat) ? 'text-white font-medium' : 'text-gray-400'}`}>
+                  <span className={`text-sm ${categoryFilter.includes(cat) ? 'text-yellow-400 font-medium' : 'text-gray-300'}`}>
                     {cat}
                   </span>
                 </label>
@@ -738,65 +639,55 @@ export default function Home() {
 
           {/* Prestige Tier Filter */}
           <div className="mb-4">
-            <h4 className="text-sm font-medium text-gray-400 mb-4">Prestige Tear</h4>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Prestige Tier</h4>
             <div className="space-y-1">
               {tiers.map(tier => (
-                <label key={tier.id} className="flex items-center gap-3 cursor-pointer py-2 transition-all hover:text-white">
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${tierFilter.includes(tier.id) ? 'bg-yellow-500 border-yellow-500' : 'bg-[#1a2d3d] border-[#2a4050]'}`}>
-                    {tierFilter.includes(tier.id) && (
-                      <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
+                <label key={tier.id} className={`flex items-center gap-3 cursor-pointer px-3 py-2 rounded-lg transition-all ${tierFilter.includes(tier.id) ? 'bg-yellow-500/10 border border-yellow-500/30' : 'hover:bg-gray-700/50'}`}>
                   <input
                     type="checkbox"
                     checked={tierFilter.includes(tier.id)}
                     onChange={() => toggleTierFilter(tier.id)}
-                    className="hidden"
+                    className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-yellow-500 focus:ring-yellow-500 focus:ring-offset-0 cursor-pointer"
                   />
-                  <span className={`text-sm ${tierFilter.includes(tier.id) ? 'text-white font-medium' : 'text-gray-400'}`}>
+                  <span className={`text-sm ${tierFilter.includes(tier.id) ? 'text-yellow-400 font-medium' : 'text-gray-300'}`}>
                     {tier.label}
                   </span>
                 </label>
               ))}
             </div>
           </div>
+
+          {/* Results count */}
+          <div className="mt-auto pt-4 border-t border-gray-700/50">
+            <p className="text-xs text-gray-500 text-center">
+              {sortedRewards.length} of {rewards.length} rewards
+            </p>
+          </div>
         </aside>
         {/* Main Content */}
         <main className="flex-1 flex flex-col items-center px-3 sm:px-4 md:px-8 py-4 overflow-visible">
-          <div className="w-full max-w-7xl flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center mb-4 sm:mb-6 px-1">
-            {/* Search Bar with Icon - Matching reference design */}
-            <div className="relative w-full sm:w-64 md:w-80 lg:w-[400px]">
-              {/* Search Icon */}
-              <svg 
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-                />
-              </svg>
-              <input 
-                type="text" 
-                placeholder="Search Rewards..." 
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="w-full pl-12 pr-4 py-3 rounded-xl text-gray-300 placeholder-gray-500 bg-[#1a2d3d] border border-[#2a3d4d] focus:outline-none focus:border-[#3a4d5d] focus:bg-[#243542] transition-all text-sm" 
-              />
-            </div>
-            {/* User Points Badge - Positioned on far right */}
-            <div className="flex items-center gap-2 bg-[#2a3d4d] rounded-full px-4 py-3 border border-[#3a4d5d] sm:ml-auto">
-              <img src="/Pts 1.png" alt="Points" className="w-6 h-6" />
-              <span className="text-white font-bold text-base">{userPoints.toLocaleString()} Pts.</span>
+          <div className="w-full flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center mb-4 sm:mb-6">
+            <input 
+              type="text" 
+              placeholder="Search rewards..." 
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
+              className="w-full sm:w-64 md:w-80 lg:w-[400px] px-4 py-2 rounded-lg bg-gray-900 text-white border border-gray-700 focus:outline-none focus:border-yellow-500 text-sm sm:text-base" 
+            />
+            <div className="flex items-center justify-between sm:justify-end gap-2">
+              <span className="text-gray-300 text-sm sm:text-lg font-medium">Sort:</span>
+            <select 
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'high-low' | 'low-high')}
+              className="bg-gray-800 text-gray-200 rounded-lg px-2 sm:px-4 py-2 border border-gray-700 focus:outline-none cursor-pointer text-sm sm:text-base flex-1 sm:flex-none"
+              style={{ minWidth: 140 }}
+            >
+              <option value="high-low">High to Low</option>
+              <option value="low-high">Low to High</option>
+            </select>
             </div>
           </div>
           {loading ? (
@@ -807,49 +698,38 @@ export default function Home() {
               </div>
             </div>
           ) : (
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6 w-full max-w-7xl px-1 overflow-visible pt-8">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 w-full max-w-7xl px-1 overflow-visible pt-8">
           {paginatedRewards.map((item) => {
             const availableStock = item.quantity || 0
             const isLowStock = availableStock <= 10 && availableStock >= 2
             const isLastOne = availableStock === 1
             const isOutOfStock = availableStock === 0
-            const tier = getTier(item.points, item.name)
+            const tier = (item as any).tier || getTier(item.points, item.name)
+            console.log('Card tier:', tier, 'for item:', item.name, 'background will be:', `/${tier}.png`)
             const tierStyles = getTierStyles(tier)
             
             return (
             <div key={item.id} className={`relative hover:scale-105 transition-all duration-200 h-full group ${(isLowStock || isLastOne) ? 'z-10 hover:z-30' : 'z-0 hover:z-30'} ${isOutOfStock ? 'cursor-not-allowed' : ''}`} style={{ overflow: 'visible' }}>
-              {/* Black Diamond Floating Particles */}
-              {tier === 'black-diamond' && (
-                <>
-                  <div className="absolute -top-2 -left-2 w-3 h-3 rounded-full bg-purple-400 blur-sm opacity-70 pointer-events-none" style={{ animation: 'blackDiamondFloat 4s ease-in-out infinite' }}></div>
-                  <div className="absolute -top-3 right-8 w-2 h-2 rounded-full bg-pink-400 blur-sm opacity-80 pointer-events-none" style={{ animation: 'blackDiamondFloat 3s ease-in-out infinite 0.5s' }}></div>
-                  <div className="absolute top-10 -right-2 w-3 h-3 rounded-full bg-violet-400 blur-sm opacity-60 pointer-events-none" style={{ animation: 'blackDiamondFloat 5s ease-in-out infinite 1s' }}></div>
-                  <div className="absolute bottom-20 -left-3 w-2 h-2 rounded-full bg-purple-300 blur-sm opacity-70 pointer-events-none" style={{ animation: 'blackDiamondFloat 4.5s ease-in-out infinite 1.5s' }}></div>
-                  <div className="absolute bottom-10 -right-1 w-2 h-2 rounded-full bg-pink-300 blur-sm opacity-80 pointer-events-none" style={{ animation: 'blackDiamondFloat 3.5s ease-in-out infinite 2s' }}></div>
-                  
-                  {/* Twinkling Stars */}
-                  <div className="absolute -top-1 left-10 text-yellow-300 text-xs pointer-events-none" style={{ animation: 'blackDiamondTwinkle 2s ease-in-out infinite' }}>✨</div>
-                  <div className="absolute top-8 -left-2 text-pink-300 text-sm pointer-events-none" style={{ animation: 'blackDiamondTwinkle2 3s ease-in-out infinite' }}>⭐</div>
-                  <div className="absolute top-20 right-5 text-purple-300 text-xs pointer-events-none" style={{ animation: 'blackDiamondTwinkle 2.5s ease-in-out infinite 0.8s' }}>✨</div>
-                  <div className="absolute top-32 -right-3 text-violet-300 text-sm pointer-events-none" style={{ animation: 'blackDiamondTwinkle3 4s ease-in-out infinite' }}>⭐</div>
-                  <div className="absolute bottom-32 left-2 text-fuchsia-300 text-xs pointer-events-none" style={{ animation: 'blackDiamondTwinkle2 3.5s ease-in-out infinite 1s' }}>✨</div>
-                  <div className="absolute bottom-16 -right-2 text-pink-200 text-sm pointer-events-none" style={{ animation: 'blackDiamondTwinkle 2.8s ease-in-out infinite 1.5s' }}>⭐</div>
-                  <div className="absolute bottom-5 left-8 text-purple-200 text-xs pointer-events-none" style={{ animation: 'blackDiamondTwinkle3 3.2s ease-in-out infinite 0.5s' }}>✨</div>
-                  <div className="absolute top-5 right-20 text-yellow-200 text-xs pointer-events-none" style={{ animation: 'blackDiamondTwinkle2 2.3s ease-in-out infinite 2s' }}>⭐</div>
-                </>
-              )}
               {/* Low Stock Banner (2-10 items) - Plain overlay */}
               {isLowStock && (
-                      <div className="absolute top-0 -right-7 bg-orange-500 text-white text-center py-1 px-3 rounded-xl font-bold text-xs shadow-lg z-10 group-hover:z-50 pointer-events-none select-none"
-                      style={{ transform: 'rotate(20deg)' }}>
+                      <div className="absolute top-0 -right-7 text-white text-center py-1 px-3 rounded-xl font-bold text-xs shadow-lg z-10 group-hover:z-50 pointer-events-none select-none"
+                      style={{ 
+                        transform: 'rotate(20deg)',
+                        backgroundColor: tierStyles.bannerColor,
+                        boxShadow: tierStyles.bannerGlow
+                      }}>
                         Only {availableStock} Left!
                       </div>
               )}
               
               {/* Last One Banner (1 item) - Animated overlay */}
               {isLastOne && (
-                      <div className="absolute top-0 -right-5 bg-red-600 text-white text-center py-1 px-3 rounded-xl font-bold text-sm animate-banner-glow z-10 group-hover:z-50 pointer-events-none select-none"
-                      style={{ transform: 'rotate(20deg)' }}>
+                      <div className="absolute top-0 -right-5 text-white text-center py-1 px-3 rounded-xl font-bold text-sm z-10 group-hover:z-50 pointer-events-none select-none"
+                      style={{ 
+                        transform: 'rotate(20deg)',
+                        backgroundColor: tierStyles.bannerColor,
+                        boxShadow: tierStyles.bannerGlow
+                      }}>
                         Last One!
                       </div>
               )}
@@ -863,79 +743,82 @@ export default function Home() {
                       </div>
               )}
               
-              <div className="transition-all duration-200 h-full">
+              <div className="transition-all duration-200 h-full" style={{aspectRatio: '1180/1756'}}>
               <div 
-                className={`flex flex-col items-center rounded-[10px] shadow-2xl border-2 transition-all duration-200 ${tierStyles.className} ${
-                  isLastOne 
-                    ? 'border-red-500' 
-                    : ''
-                } ${tier === 'black-diamond' ? 'bg-gradient-to-br from-[#1a0033] via-[#4a0e4e] to-[#0a001a]' : tier === 'diamond' ? 'bg-gradient-to-b from-[#2D1E44] to-[#67219D]' : tier === 'gold' ? 'bg-gradient-to-b from-[#FCDB6A] to-[#A66F08]' : tier === 'silver' ? 'bg-gradient-to-b from-[#E9E9EB] to-[#494A4E]' : tier === 'bronze' ? 'bg-gradient-to-b from-[#C97D03] to-[#2B1807]' : 'bg-white'}`} 
+                className={`relative flex flex-col items-center justify-end shadow-2xl border-2 transition-all duration-200 w-full h-full overflow-hidden ${tierStyles.className}`}
                 style={{
-                  width: '295px',
-                  height: '439px',
-                  borderColor: isLastOne ? '#ef4444' : tierStyles.borderColor,
-                  animation: isLastOne ? 'pulseGlow 1.5s ease-in-out infinite' : tierStyles.animation,
-                  ...(isLastOne && {
-                    boxShadow: '0 0 20px rgba(239, 68, 68, 0.7), 0 0 40px rgba(239, 68, 68, 0.4)',
-                  })
+                  borderRadius: '10px',
+                  borderColor: tierStyles.borderColor,
+                  animation: tierStyles.animation,
+                  backgroundImage: `url(/${tier}.png)`,
+                  backgroundSize: '100% 100%',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
                 }}
               >
-              {/* Image - fills most of card */}
-              <div className={`w-full flex-1 rounded-t-[10px] px-3 py-3 flex items-center justify-center overflow-hidden relative ${
-                tier === 'black-diamond' ? 'bg-transparent' :
-                tier === 'diamond' ? 'bg-transparent' :
-                tier === 'gold' ? 'bg-transparent' :
-                tier === 'silver' ? 'bg-transparent' :
-                'bg-transparent'
-              }`}>
-                <img 
-                  src={(item as any).image || `https://via.placeholder.com/295x300/333333/FFFFFF?text=${encodeURIComponent(item.name)}`}
-                  alt={item.name}
-                  className={`w-full h-full object-cover rounded-[10px] ${tier === 'black-diamond' ? 'animate-blackDiamondSparkle' : ''}`}
-                  style={tier === 'black-diamond' ? { animation: 'blackDiamondSparkle 3s ease-in-out infinite' } : {}}
-                />
-                {/* Cosmic overlay for premium tiers */}
-                {(tier === 'black-diamond' || tier === 'diamond' || tier === 'gold' || tier === 'silver' || tier === 'bronze') && (
-                  <div className={`absolute inset-0 ${tierStyles.imageOverlay} rounded-[10px] pointer-events-none`}></div>
-                )}
-                {/* Black Diamond Shimmer Effect */}
-                {tier === 'black-diamond' && (
+                {/* Animated border and glow layer for last one */}
+                {isLastOne && (
                   <div 
-                    className="absolute inset-0 rounded-[10px] pointer-events-none opacity-30"
+                    className="absolute inset-[-2px] border-2 rounded-[10px] animate-pulse pointer-events-none z-50"
                     style={{
-                      background: 'linear-gradient(90deg, transparent 0%, rgba(236, 72, 153, 0.6) 50%, transparent 100%)',
-                      backgroundSize: '200% 100%',
-                      animation: 'blackDiamondShimmer 3s linear infinite'
+                      borderColor: tierStyles.bannerColor,
+                      boxShadow: tierStyles.bannerGlow,
                     }}
-                  ></div>
+                  />
                 )}
+              {/* Image - 100% width & height */}
+              <div className="w-full h-48 rounded-t-xl px-3 py-3 flex items-center justify-center overflow-hidden">
+                <img 
+                  src={(item as any).image || `https://via.placeholder.com/300x200/333333/FFFFFF?text=${encodeURIComponent(item.name)}`}
+                  alt={item.name}
+                  className="w-full h-full object-cover rounded-xl"
+                />
               </div>
               
-              <div className={`px-3 py-3 w-full flex flex-col gap-1 ${(tier === 'diamond' || tier === 'gold' || tier === 'silver' || tier === 'bronze') ? 'bg-transparent' : ''}`}>
+              <div className="px-3 py-3 w-full flex flex-col gap-1 items-center">
               {/* Reward Name - Left aligned */}
-              <div className={`font-extrabold text-lg text-left w-full ${tierStyles.textColor}`}>{item.name}</div>
+              <div className="font-extrabold text-lg text-left w-full text-white drop-shadow-lg">{item.name}</div>
               
               {/* Points with token icon - Left aligned */}
-              <div className={`mb-0 text-left w-full flex items-center gap-2 font-medium ${tierStyles.textColor}`}>
-                <img src="/Pts 1.png" alt="Points" className="w-5 h-5" />
-                <span className={`${tierStyles.pointsColor} font-bold text-lg`}>{item.points.toLocaleString()}</span>
+              <div className="mb-0 text-left w-full flex items-center gap-2 font-medium text-white">
+                <img src="/pts.png" alt="Points" className="w-6 h-6" />
+                <span className="font-bold text-lg text-yellow-300">{item.points.toLocaleString()}</span>
               </div>
               
               {/* Claim Button */}
               <motion.button
                 type="button"
-                className={`px-6 py-2.5 rounded-lg font-bold shadow transition w-full mt-auto text-sm uppercase tracking-wide ${
+                className={`px-3 py-1.5 rounded-lg font-bold shadow transition mt-auto text-sm border-2 ${
                   isOutOfStock
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : isLastOne && tier !== 'black-diamond' && tier !== 'diamond' && tier !== 'gold'
-                    ? 'bg-red-600 text-white hover:bg-red-700 animate-pulse' 
-                    : tierStyles.buttonBg
+                    : ''
                 }`}
+                style={{
+                  width: '60%',
+                  borderColor: isOutOfStock ? 'rgba(255, 255, 255, 0.2)' : tierStyles.buttonBorderColor,
+                  boxShadow: 'none',
+                  ...(isOutOfStock ? {} : {
+                    background: isLastOne 
+                      ? `linear-gradient(180deg, ${tierStyles.bannerColor} 0%, ${tierStyles.bannerColor}aa 100%)`
+                      : `linear-gradient(180deg, ${tierStyles.buttonColor} 0%, ${tierStyles.buttonColor}aa 100%)`,
+                    color: 'white'
+                  })
+                }}
                 onClick={() => !isOutOfStock && setSelectedReward(item)}
                 disabled={isOutOfStock}
                 whileHover={!isOutOfStock ? { scale: 1.05 } : {}}
                 whileTap={!isOutOfStock ? { scale: 0.95 } : {}}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                onMouseEnter={e => {
+                  if (!isOutOfStock) {
+                    e.currentTarget.style.boxShadow = `0 0 12px ${tierStyles.buttonBorderColor}, 0 0 24px ${tierStyles.buttonBorderColor}`;
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isOutOfStock) {
+                    e.currentTarget.style.boxShadow = 'none';
+                  }
+                }}
               >
                 {isOutOfStock ? 'OUT OF STOCK' : 'CLAIM NOW'}
               </motion.button>
@@ -1014,10 +897,14 @@ export default function Home() {
             setClaimStatus(null);
             setIsChecking(false);
           }}>
-            <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-lg w-full border-2 border-blue-500 animate-scaleIn" onClick={(e) => e.stopPropagation()}>
+            <div className="shadow-2xl p-8 max-w-lg w-full animate-scaleIn relative overflow-hidden" style={{ 
+              borderRadius: '20px',
+              background: 'linear-gradient(#1F2937, #1F2937) padding-box, linear-gradient(135deg, #FF7901, #FFA323) border-box',
+              border: '2px solid transparent'
+            }} onClick={(e) => e.stopPropagation()}>
               {/* Close button */}
               <button 
-                className="absolute top-4 right-4 text-gray-400 hover:text-white text-3xl font-bold"
+                className="absolute -top-1 right-0 text-gray-400 hover:text-white text-3xl font-bold w-12 h-12 flex items-center justify-center"
                 onClick={() => {
                   setShowClaimsChecker(false);
                   setCheckClaimId('');
@@ -1030,7 +917,7 @@ export default function Home() {
               
               {/* Header */}
               <div className="text-center mb-6">
-                <h2 className="text-3xl font-extrabold text-blue-400 mb-2">Claims Checker</h2>
+                <h2 className="text-3xl font-extrabold mb-2" style={{ background: 'linear-gradient(135deg, #FF7901, #FFA323)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Claims Checker</h2>
                 <p className="text-gray-300 text-sm">Please enter your Request ID so you can see the status of your request</p>
               </div>
               
@@ -1042,12 +929,15 @@ export default function Home() {
                     value={checkClaimId}
                     onChange={(e) => setCheckClaimId(e.target.value.toUpperCase())}
                     placeholder="Enter Request ID (e.g., CLM-XY7K4M9B2)"
-                    className="w-full px-4 py-3 pr-12 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+                    className="w-full px-4 py-3 pr-12 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none transition"
+                    // style removed: focusBorderColor is not a valid CSS property
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#FF7901'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#4B5563'}
                     disabled={isChecking}
                   />
                   {isChecking && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <div className="w-6 h-6 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-6 h-6 border-3 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#FF7901', borderTopColor: 'transparent' }}></div>
                     </div>
                   )}
                 </div>
@@ -1062,12 +952,9 @@ export default function Home() {
                   
                   try {
                     const response = await fetch(`/api/claims?claimId=${checkClaimId}`);
-                    const result = await response.json();
+                    const data = await response.json();
                     
-                    if (response.ok && result.success) {
-                      // Handle new API response format
-                      const data = result.data;
-                      
+                    if (response.ok) {
                       // Capitalize first letter for display
                       const displayStatus = data.status.charAt(0).toUpperCase() + data.status.slice(1);
                       
@@ -1098,7 +985,7 @@ export default function Home() {
                       setClaimStatus({
                         status: 'Not Found',
                         color: 'red',
-                        message: result.error || 'Claim not found. Please check your Request ID.'
+                        message: data.error || 'Claim not found. Please check your Request ID.'
                       });
                     }
                   } catch (error) {
@@ -1113,11 +1000,24 @@ export default function Home() {
                   }
                 }}
                 disabled={!checkClaimId.trim() || isChecking}
-                className={`w-full py-3 rounded-lg font-bold text-lg transition shadow-lg ${
+                className={`w-full py-3 rounded-lg font-bold text-lg transition shadow-lg border-2 ${
                   !checkClaimId.trim() || isChecking
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'text-white'
                 }`}
+                style={!checkClaimId.trim() || isChecking ? {} : { background: 'linear-gradient(135deg, #FF7901 0%, #FFA323 100%)', borderColor: '#FFA323', boxShadow: 'none' }}
+                onMouseEnter={(e) => {
+                  if (!(!checkClaimId.trim() || isChecking)) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #E66D01 0%, #E69320 100%)';
+                    e.currentTarget.style.boxShadow = '0 0 12px #FFA323, 0 0 24px #FFA323';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!(!checkClaimId.trim() || isChecking)) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #FF7901 0%, #FFA323 100%)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }
+                }}
               >
                 {isChecking ? 'Checking...' : 'Check Claim'}
               </button>
@@ -1219,43 +1119,41 @@ export default function Home() {
             transition={{ duration: 0.2 }}
           >
             <motion.div 
-              className="relative rounded-2xl shadow-2xl p-6 max-w-3xl w-full text-white max-h-[90vh] overflow-y-auto overflow-x-hidden" 
-              style={{
-                background: 'linear-gradient(90deg, #0A1F30 0%, #0B3151 100%)',
-              }}
+              className="rounded-2xl shadow-2xl p-8 max-w-4xl w-full text-yellow-100 relative max-h-[90vh] overflow-y-auto" 
+              style={{ background: 'linear-gradient(135deg, #0A1F30 0%, #0B3151 100%)' }}
               onClick={(e) => e.stopPropagation()}
               initial={{ scale: 0.9, opacity: 0, y: 30 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 30 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
             >
-              <button className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold z-10" onClick={() => setSelectedReward(null)}>&times;</button>
+              <button className="absolute top-0 right-3 text-gray-400 hover:text-yellow-300 text-3xl font-bold z-10" onClick={() => setSelectedReward(null)}>&times;</button>
               
               {/* First Row - 2 Columns */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* Column 1: Image and Gallery */}
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2 h-full">
                   {/* Main Display Image */}
-                  <div className="aspect-[658/403] bg-[#1a2a3a] rounded-lg flex items-center justify-center overflow-hidden">
+                  <div className="h-64 bg-gray-900 rounded-xl flex items-center justify-center overflow-hidden border-2 border-yellow-700 relative">
                     <img 
                       src={
                         (selectedReward as any).galleries && selectedVariant && (selectedReward as any).galleries[selectedVariant]
                           ? (selectedReward as any).galleries[selectedVariant][selectedGalleryImage]
-                          : ((selectedReward as any).image || `https://via.placeholder.com/658x403/1a2a3a/666666?text=${encodeURIComponent(selectedReward.name)}`)
+                          : ((selectedReward as any).image || `https://via.placeholder.com/400x400/333333/FFFFFF?text=${encodeURIComponent(selectedReward.name)}`)
                       }
                       alt={`${selectedReward.name} - ${selectedVariant} - Image ${selectedGalleryImage + 1}`}
                       className="w-full h-full object-contain"
                     />
                   </div>
                   {/* Gallery Thumbnails */}
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-1.5 max-w-xs justify-center mx-auto">
                     {[0, 1, 2, 3].map((idx) => (
                       <div 
                         key={idx} 
-                        className={`aspect-[150/100] bg-[#1a2a3a] rounded-lg cursor-pointer transition flex items-center justify-center overflow-hidden border ${
+                        className={`aspect-square bg-gray-700 rounded border cursor-pointer transition flex items-center justify-center overflow-hidden relative ${
                           selectedGalleryImage === idx 
-                            ? 'border-white' 
-                            : 'border-transparent hover:border-gray-500'
+                            ? 'border-yellow-500 ring-1 ring-yellow-500' 
+                            : 'border-gray-600 hover:border-yellow-400'
                         }`}
                         onClick={() => setSelectedGalleryImage(idx)}
                       >
@@ -1263,37 +1161,37 @@ export default function Home() {
                           src={
                             (selectedReward as any).galleries && selectedVariant && (selectedReward as any).galleries[selectedVariant]
                               ? (selectedReward as any).galleries[selectedVariant][idx]
-                              : ((selectedReward as any).image || `https://via.placeholder.com/150x100/1a2a3a/666666?text=${idx + 1}`)
+                              : ((selectedReward as any).image || `https://via.placeholder.com/100x100/555555/FFFFFF?text=${idx + 1}`)
                           }
                           alt={`Gallery ${idx + 1}`}
                           className="w-full h-full object-cover"
                         />
+                        {selectedGalleryImage === idx && (
+                          <div className="absolute inset-0 bg-yellow-500/20 pointer-events-none" />
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Column 2: Reward Details */}
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-2 h-full">
                   {/* Reward Name */}
-                  <h2 className="font-bold text-2xl text-white">{selectedReward.name}</h2>
-                  
-                  {/* Subtitle */}
-                  <p className="text-sm text-gray-300">{selectedReward.name}</p>
+                  <h2 className="font-extrabold text-2xl text-yellow-200">{selectedReward.name}</h2>
                   
                   {/* Extra Detail */}
-                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">Premium quality reward from our exclusive collection.<br/>Limited availability.</p>
+                  <p className="text-xs text-gray-400">Premium quality reward from our exclusive collection. Limited availability.</p>
                   
                   {/* Variant Options */}
                   {(selectedReward as any).variants && (
-                    <div className="mt-4">
-                      <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-300 uppercase">
                         Select {(selectedReward as any).variants.type}:
                       </label>
                       
                       {(selectedReward as any).variants.type === 'color' ? (
                         /* Colored circle buttons for color variants */
-                        <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="flex flex-wrap gap-1">
                           {(selectedReward as any).variants.options.map((option: string) => {
                             const colorMap: { [key: string]: string } = {
                               'Black': '#000000',
@@ -1325,16 +1223,16 @@ export default function Home() {
                                   setSelectedVariant(option)
                                   setSelectedGalleryImage(0)
                                 }}
-                                className={`relative w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                                className={`relative w-6 h-6 rounded-full border-2 transition-all hover:scale-110 ${
                                   selectedVariant === option
                                     ? 'border-yellow-400 ring-2 ring-yellow-400/50'
-                                    : 'border-gray-500 hover:border-gray-300'
+                                    : 'border-gray-600 hover:border-gray-400'
                                 }`}
                                 style={{ backgroundColor: bgColor }}
                                 title={option}
                               >
                                 {option === 'White' || option === 'Clear' || option.includes('White') ? (
-                                  <div className="absolute inset-0 rounded-full border border-gray-400" />
+                                  <div className="absolute inset-0 rounded-full border border-gray-300" />
                                 ) : null}
                               </button>
                             )
@@ -1342,7 +1240,7 @@ export default function Home() {
                         </div>
                       ) : (
                         /* Text buttons for non-color variants */
-                        <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="flex flex-wrap gap-2">
                           {(selectedReward as any).variants.options.map((option: string) => (
                             <button
                               key={option}
@@ -1351,10 +1249,10 @@ export default function Home() {
                                 setSelectedVariant(option)
                                 setSelectedGalleryImage(0)
                               }}
-                              className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+                              className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
                                 selectedVariant === option
                                   ? 'bg-yellow-500 text-black'
-                                  : 'bg-[#2d3a4a] text-gray-300 hover:bg-[#3d4a5a] border border-[#4d5a6a]'
+                                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
                               }`}
                             >
                               {option}
@@ -1366,27 +1264,27 @@ export default function Home() {
                   )}
                   
                   {/* Points */}
-                  <div className="flex items-center gap-2 mt-4">
-                    <img src="/Pts 1.png" alt="Points" className="w-7 h-7" />
-                    <span className="text-2xl font-bold text-orange-400">{selectedReward.points.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <div className="flex items-center gap-2 text-xl font-bold">
+                    <span className="text-2xl">🪙</span>
+                    <span className="text-yellow-300">{selectedReward.points.toLocaleString()} Points</span>
                   </div>
                   
                   {/* Claiming Steps */}
-                  <div className="bg-[#0d1a26] rounded-lg p-4 mt-4">
-                    <h3 className="font-semibold text-sm text-white mb-2">Claiming Process:</h3>
-                    <ol className="text-xs text-gray-400 space-y-0.5">
-                      <li>1. Fill out the claim form below.</li>
-                      <li>2. Wait for admin approval (24-48 hours).</li>
-                      <li>3. Receive confirmation via email/SMS.</li>
-                      <li>4. Claim your reward or receive delivery.</li>
+                  <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                    <h3 className="font-bold text-sm text-yellow-400 mb-2">📋 Claiming Process:</h3>
+                    <ol className="text-xs text-gray-300 space-y-1 list-decimal list-inside">
+                      <li>Fill out the claim form below</li>
+                      <li>Wait for admin approval (24-48 hours)</li>
+                      <li>Receive confirmation via email/SMS</li>
+                      <li>Claim your reward or receive delivery</li>
                     </ol>
                   </div>
                 </div>
               </div>
 
               {/* Second Row - Claim Form */}
-              <div className="mt-6">
-                <h3 className="font-semibold text-lg text-white mb-4">Complete Your Claim</h3>
+              <div className="border-t border-gray-700 pt-4">
+                <h3 className="font-bold text-lg text-yellow-300 mb-3">Complete Your Claim</h3>
                 <form className="grid grid-cols-1 md:grid-cols-2 gap-3" onSubmit={async (e) => { 
                   e.preventDefault(); 
                   
@@ -1397,7 +1295,6 @@ export default function Home() {
                     username: formData.get('username'),
                     fullName: formData.get('fullName'),
                     phoneNumber: formData.get('phoneNumber'),
-                    email: formData.get('email'),
                     deliveryAddress: formData.get('deliveryAddress'),
                     ewalletName: formData.get('ewalletName'),
                     ewalletAccount: formData.get('ewalletAccount')
@@ -1416,83 +1313,113 @@ export default function Home() {
                       setClaimId(data.claimId);
                       setShowSuccessModal(true);
                     } else {
-                      alert('Error submitting claim: ' + (result.error || 'An error occurred'));
+                      alert('Error submitting claim: ' + data.error);
                     }
                   } catch (error) {
                     console.error('Error submitting claim:', error);
                     alert('Failed to submit claim. Please try again.');
                   }
                 }}>
-                  {/* Common Fields */}
-                  <input 
-                    type="text" 
-                    name="username"
-                    placeholder="Username" 
-                    className="border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
-                    required 
-                  />
-                  <input 
-                    type="text" 
-                    name="fullName"
-                    placeholder="Full Name" 
-                    className="border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
-                    required 
-                  />
-                  <input 
-                    type="tel" 
-                    name="phoneNumber"
-                    placeholder="Phone Number" 
-                    className="border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
-                    required 
-                  />
-                  <input 
-                    type="email" 
-                    name="email"
-                    placeholder="Email Address" 
-                    className="border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
-                    required 
-                  />
-                  
-                  {/* Conditional Fields based on category */}
+                  {/* E-wallet Category Fields Only */}
                   {(selectedReward as any).category === 'E-wallet' ? (
                     <>
-                      <input 
-                        type="text" 
-                        name="ewalletName"
-                        placeholder="E-wallet Name (GCash/Maya)" 
-                        className="border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
-                        required 
-                      />
-                      <input 
-                        type="text" 
-                        name="ewalletAccount"
-                        placeholder="E-wallet Account Number" 
-                        className="md:col-span-2 border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
-                        required 
-                      />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:col-span-2">
+                        <input 
+                          type="text" 
+                          name="username"
+                          placeholder="Username" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="text" 
+                          name="fullName"
+                          placeholder="Full Name" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="email" 
+                          name="email"
+                          placeholder="Email" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:col-span-2">
+                        <input 
+                          type="text" 
+                          name="ewalletName"
+                          placeholder="E-wallet Name (GCash/Maya)" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="text" 
+                          name="ewalletAccount"
+                          placeholder="E-wallet Account Number" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                      </div>
                     </>
                   ) : (
-                    <input 
-                      type="text"
-                      name="deliveryAddress"
-                      placeholder="Complete Delivery Address" 
-                      className="md:col-span-2 border border-[#1a2a3a] rounded-lg px-4 py-3 bg-[#0d1a26] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition" 
-                      required 
-                    />
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:col-span-2">
+                        <input 
+                          type="text" 
+                          name="username"
+                          placeholder="Username" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="text" 
+                          name="fullName"
+                          placeholder="Full Name" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="email" 
+                          name="email"
+                          placeholder="Email" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:col-span-2">
+                        <input 
+                          type="tel" 
+                          name="phoneNumber"
+                          placeholder="Phone Number" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="text"
+                          name="deliveryAddress"
+                          placeholder="Complete Delivery Address" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                      </div>
+                    </>
                   )}
                   
                   {/* Submit Button */}
-                  <div className="md:col-span-2 flex justify-center mt-4">
-                    <motion.button 
-                      type="submit" 
-                      className="bg-gradient-to-b from-orange-400 to-orange-600 text-white px-20 py-4 rounded-xl font-bold text-lg uppercase tracking-wide shadow-lg hover:from-orange-500 hover:to-orange-700 transition"
-                      whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(249, 115, 22, 0.4)" }}
-                      whileTap={{ scale: 0.98 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    >
-                      CONFIRM CLAIM
-                    </motion.button>
-                  </div>
+                  <motion.button 
+                    type="submit" 
+                    className="md:col-span-2 text-white px-4 py-2 rounded-lg font-bold text-base shadow-lg transition mt-1 mx-auto block border-2" 
+                    style={{ width: '40%', background: 'linear-gradient(180deg, #FF7901 0%, #FFA323 100%)', borderColor: '#FFA323', boxShadow: 'none' }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(180deg, #E66D01 0%, #E69320 100%)'; e.currentTarget.style.boxShadow = '0 0 12px #FFA323, 0 0 24px #FFA323'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(180deg, #FF7901 0%, #FFA323 100%)'; e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    Confirm Claim
+                  </motion.button>
                 </form>
               </div>
             </motion.div>
