@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
       points: reward.points,
       category: reward.category,
       quantity: reward.quantity,
+      tier: reward.tier || 'bronze',
       variants: {
         type: reward.variant_type || 'color',
         options: reward.variants?.map((v: any) => v.option_name) || []
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, name, points, category, quantity, variantType, variantOptions, galleries } = body
+    const { id, name, points, category, quantity, variantType, variantOptions, tier, galleries } = body
 
     // Update reward basic info
     const { error: updateError } = await supabase
@@ -68,6 +69,7 @@ export async function PATCH(request: NextRequest) {
         category,
         quantity: parseInt(quantity),
         variant_type: variantType,
+        tier: tier || 'bronze',
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -196,7 +198,7 @@ export async function DELETE(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, points, category, quantity, variantType, variantOptions, galleries } = body
+    const { name, points, category, quantity, variantType, variantOptions, tier, galleries } = body
 
     // Insert reward
     const { data: reward, error: rewardError } = await supabase
@@ -206,7 +208,8 @@ export async function POST(request: NextRequest) {
         points: parseInt(points),
         category,
         quantity: parseInt(quantity),
-        variant_type: variantType
+        variant_type: variantType,
+        tier: tier || 'bronze'
       })
       .select()
       .single()

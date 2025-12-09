@@ -36,6 +36,7 @@ export default function AdminDashboard() {
     variantType: 'color',
     points: '',
     quantity: '',
+    tier: 'bronze',
     variants: [] as Array<{name: string, images: (string | File)[]}>
   })
   const [showRejectPopup, setShowRejectPopup] = useState(false)
@@ -234,6 +235,7 @@ export default function AdminDashboard() {
       variantType: variantTypes[0] || 'color',
       points: '',
       quantity: '',
+      tier: 'bronze',
       variants: []
     })
     setShowRewardForm(true)
@@ -251,6 +253,7 @@ export default function AdminDashboard() {
       variantType: reward.variants?.type || 'color',
       points: reward.points.toString(),
       quantity: reward.quantity?.toString() || '0',
+      tier: (reward as any).tier || 'bronze',
       variants: variants.map((v: string) => ({
         name: v,
         images: galleries[v] || ['', '', '', '']
@@ -350,6 +353,7 @@ export default function AdminDashboard() {
             quantity: formData.quantity,
             variantType: formData.variantType,
             variantOptions,
+            tier: formData.tier,
             galleries
           })
         })
@@ -368,6 +372,7 @@ export default function AdminDashboard() {
             name: formData.name,
             points: formData.points,
             category: formData.category,
+            tier: formData.tier,
             quantity: formData.quantity,
             variantType: formData.variantType,
             variantOptions,
@@ -1061,6 +1066,24 @@ export default function AdminDashboard() {
                     required
                   />
                 </div>
+              </div>
+
+              {/* Tier Selection */}
+              <div>
+                <label className="block text-yellow-400 font-semibold mb-2">Prestige Tier *</label>
+                <select
+                  value={formData.tier}
+                  onChange={(e) => setFormData({...formData, tier: e.target.value})}
+                  className="w-full px-4 py-3 bg-[#23272f] text-white rounded-lg border border-yellow-600 focus:outline-none focus:border-yellow-400"
+                  required
+                >
+                  <option value="bronze">🥉 Bronze - Entry Level</option>
+                  <option value="silver">🥈 Silver - Mid Range</option>
+                  <option value="gold">🥇 Gold - Premium</option>
+                  <option value="diamond">💎 Diamond - Luxury</option>
+                  <option value="black-diamond">⬛ Black Diamond - Ultra Exclusive</option>
+                </select>
+                <p className="text-gray-400 text-xs mt-2">Select the prestige tier for this reward card</p>
               </div>
 
               {/* Submit Buttons */}

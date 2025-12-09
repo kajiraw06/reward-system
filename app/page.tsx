@@ -1,7 +1,11 @@
+
 "use client"
 import Image from 'next/image'
 import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import dynamic from 'next/dynamic'
+
+const PointsRangeSlider = dynamic(() => import('./PointsRangeSlider'), { ssr: false })
 
 const basePath = '' // Removed basePath for local development with API routes
 
@@ -37,6 +41,16 @@ export default function Home() {
   const [checkClaimId, setCheckClaimId] = useState('')
   const [isChecking, setIsChecking] = useState(false)
   const [claimStatus, setClaimStatus] = useState<{status: string, color: string, message: string} | null>(null)
+  const [carouselIndex, setCarouselIndex] = useState(0)
+
+  // Preload tier background images
+  useEffect(() => {
+    const tiers = ['diamond', 'black-diamond'];
+    tiers.forEach(tier => {
+      const img = new window.Image();
+      img.src = `/${tier}.png`;
+    });
+  }, []);
 
   // Fetch rewards from database
   useEffect(() => {
@@ -63,6 +77,25 @@ export default function Home() {
 
     fetchRewards()
   }, [])
+
+  // Memoize filtered carousel rewards (diamond and black-diamond only)
+  const carouselRewards = useMemo(() => {
+    return rewards
+      .filter((item: any) => {
+        const tier = (item as any).tier || getTier(item.points, item.name);
+        return tier === 'diamond' || tier === 'black-diamond';
+      })
+      .slice(0, 10);
+  }, [rewards]);
+
+  // Auto-advance carousel every 5 seconds (right to left movement)
+  useEffect(() => {
+    if (carouselRewards.length === 0) return;
+    const interval = setInterval(() => {
+      setCarouselIndex((prev) => (prev - 1 + carouselRewards.length) % carouselRewards.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [carouselRewards.length])
 
   // Reset gallery image and variant when popup opens
   useEffect(() => {
@@ -130,7 +163,7 @@ export default function Home() {
     return filtered
   }, [rewards, searchQuery, categoryFilter, tierFilter, pointsRange, sortOrder])
 
-  const getTierStyles = (tier: string) => {
+  const getTierStyles = useMemo(() => (tier: string) => {
     switch (tier) {
       case 'black-diamond':
         return {
@@ -140,19 +173,27 @@ export default function Home() {
           textColor: 'text-purple-300',
           pointsColor: 'text-purple-400',
           buttonBg: 'bg-purple-600 hover:bg-purple-700 text-white',
+          buttonColor: '#8b5cf6',
+          buttonBorderColor: '#c084fc',
           tierLabel: 'BLACK DIAMOND',
-          tierLabelBg: 'bg-gradient-to-r from-purple-900 to-black'
+          tierLabelBg: 'bg-gradient-to-r from-purple-900 to-black',
+          bannerColor: '#8b5cf6',
+          bannerGlow: '0 0 20px rgba(139, 92, 246, 0.7), 0 0 40px rgba(139, 92, 246, 0.4)'
         }
       case 'diamond':
         return {
-          borderColor: '#e5e7eb',
+          borderColor: '#6366f1',
           animation: 'diamondSparkle 2s ease-in-out infinite',
           className: 'tier-diamond',
           textColor: 'text-gray-800',
           pointsColor: 'text-purple-600',
           buttonBg: 'bg-gray-800 hover:bg-gray-900 text-white',
+          buttonColor: '#6366f1',
+          buttonBorderColor: '#818cf8',
           tierLabel: '💠 DIAMOND',
-          tierLabelBg: 'bg-gradient-to-r from-indigo-600 to-purple-600'
+          tierLabelBg: 'bg-gradient-to-r from-indigo-600 to-purple-600',
+          bannerColor: '#6366f1',
+          bannerGlow: '0 0 20px rgba(99, 102, 241, 0.7), 0 0 40px rgba(99, 102, 241, 0.4)'
         }
       case 'gold':
         return {
@@ -162,19 +203,27 @@ export default function Home() {
           textColor: 'text-yellow-900',
           pointsColor: 'text-yellow-800',
           buttonBg: 'bg-black hover:bg-gray-800 text-yellow-400',
+          buttonColor: '#ffd700',
+          buttonBorderColor: '#fde047',
           tierLabel: 'GOLD',
-          tierLabelBg: 'bg-gradient-to-r from-yellow-500 to-yellow-600'
+          tierLabelBg: 'bg-gradient-to-r from-yellow-500 to-yellow-600',
+          bannerColor: '#ffd700',
+          bannerGlow: '0 0 20px rgba(255, 215, 0, 0.7), 0 0 40px rgba(255, 215, 0, 0.4)'
         }
       case 'silver':
         return {
-          borderColor: '#c0c0c0',
+          borderColor: '#a8a8a8',
           animation: 'silverShine 3s ease-in-out infinite',
           className: 'tier-silver',
           textColor: 'text-gray-800',
           pointsColor: 'text-gray-700',
           buttonBg: 'bg-gray-700 hover:bg-gray-800 text-white',
+          buttonColor: '#9ca3af',
+          buttonBorderColor: '#d1d5db',
           tierLabel: 'SILVER',
-          tierLabelBg: 'bg-gradient-to-r from-gray-400 to-gray-500'
+          tierLabelBg: 'bg-gradient-to-r from-gray-400 to-gray-500',
+          bannerColor: '#9ca3af',
+          bannerGlow: '0 0 20px rgba(156, 163, 175, 0.8), 0 0 40px rgba(156, 163, 175, 0.5)'
         }
       default: // bronze
         return {
@@ -184,11 +233,15 @@ export default function Home() {
           textColor: 'text-yellow-100',
           pointsColor: 'text-yellow-200',
           buttonBg: 'bg-yellow-900 hover:bg-yellow-800 text-yellow-100',
+          buttonColor: '#cd7f32',
+          buttonBorderColor: '#fb923c',
           tierLabel: 'BRONZE',
-          tierLabelBg: 'bg-gradient-to-r from-amber-700 to-amber-800'
+          tierLabelBg: 'bg-gradient-to-r from-amber-700 to-amber-800',
+          bannerColor: '#cd7f32',
+          bannerGlow: '0 0 20px rgba(205, 127, 50, 0.7), 0 0 40px rgba(205, 127, 50, 0.4)'
         }
     }
-  }
+  }, [])
 
   // Reset to page 1 when filter changes
   const totalPages = Math.ceil(sortedRewards.length / ITEMS_PER_PAGE)
@@ -250,14 +303,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col overflow-visible">
       {/* Header */}
-      <header className="w-full bg-gray-800 px-4 sm:px-8 py-2 flex items-center justify-between shadow-lg">
+      <header className="w-full bg-gray-800 px-4 sm:px-8 py-3 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-4">
-          <img src="/time2bet-logo.svg" alt="Time2Bet Logo" className="w-24 sm:w-[140px]" />
+          <img src="/Time2Claim.png" alt="Time2Claim Logo" className="w-24 sm:w-[140px]" />
         </div>
         <div className="flex items-center gap-2 sm:gap-6">
           {/* Claims Checker button */}
           <button 
-            className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition"
+            className="px-3 sm:px-4 py-2 text-white rounded-lg font-semibold text-sm transition border-2"
+            style={{ background: 'linear-gradient(135deg, #FF7901 0%, #FFA323 100%)', borderColor: '#FFA323', boxShadow: 'none' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, #E66D01 0%, #E69320 100%)'; e.currentTarget.style.boxShadow = '0 0 12px #FFA323, 0 0 24px #FFA323'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, #FF7901 0%, #FFA323 100%)'; e.currentTarget.style.boxShadow = 'none'; }}
             onClick={() => setShowClaimsChecker(true)}
           >
             Claims Checker
@@ -271,32 +327,208 @@ export default function Home() {
           </button>
         </div>
       </header>
-      {/* Banner Carousel - Infinite Left Scroll */}
-      <div className="w-full py-3 sm:py-6 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
-        {/* Mobile: constrained with padding, Desktop: edge-to-edge */}
-        <div className="w-full px-3 sm:px-0 relative">
-          {/* Carousel Container - rounded on mobile, no rounding on desktop */}
-          <div className="relative h-24 xs:h-32 sm:h-56 md:h-72 overflow-hidden rounded-xl sm:rounded-none">
-            <div 
-              className="flex animate-carousel h-full"
-              style={{ width: `${bannerImages.length * 2 * 100}%` }}
-            >
-              {/* Duplicate images for seamless loop */}
-              {[...bannerImages, ...bannerImages].map((img, index) => (
-                <div 
-                  key={index} 
-                  className="h-full flex items-center justify-center px-4"
-                  style={{ width: `${100 / (bannerImages.length * 2)}%` }}
-                >
-                  <img 
-                    src={img.src} 
-                    alt={img.alt} 
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
-              ))}
-            </div>
+      {/* Banner Section */}
+      <div className="w-full bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 overflow-visible flex flex-col items-center relative pb-0">
+        {/* Banner Image */}
+        <div className="w-full relative">
+          <div className="relative h-32 sm:h-48 md:h-64 overflow-hidden flex items-center justify-center">
+            <img 
+              src="/bannertop.png" 
+              alt="Banner" 
+              className="w-full h-full object-cover"
+            />
           </div>
+        </div>
+      </div>
+
+      {/* Divider with Glow - Positioned between banner and carousel */}
+      <div className="w-full flex justify-center relative z-20" style={{ marginTop: '-2px', marginBottom: '-2px' }}>
+        <div 
+          className="h-1 rounded-full"
+          style={{
+            width: '55%',
+            backgroundColor: '#69E8F8',
+            boxShadow: '0 0 10px #69E8F8, 0 0 20px #69E8F8, 0 0 30px #69E8F8'
+          }}
+        />
+      </div>
+
+      {/* Featured Rewards Carousel - Stacked Card Style */}
+      <div className="w-full bg-gradient-to-b from-gray-800 to-gray-900 py-0 px-4 overflow-hidden">
+        <div className="relative max-w-6xl mx-auto h-[500px] flex items-center justify-center">
+          {carouselRewards.map((item: any, idx: number) => {
+              const tier = (item as any).tier || getTier(item.points, item.name)
+              const tierStyles = getTierStyles(tier)
+              const availableStock = (item as any).available_stock ?? 999
+              const isOutOfStock = availableStock === 0
+              const isLastOne = availableStock === 1
+
+              // Calculate position relative to center card
+              const position = (idx - carouselIndex + carouselRewards.length) % carouselRewards.length
+              const adjustedPos = position > carouselRewards.length / 2 ? position - carouselRewards.length : position
+
+              // Only show 5 cards: -2, -1, 0, 1, 2
+              if (adjustedPos < -2 || adjustedPos > 2) return null
+
+              // Calculate scale and position based on distance from center
+              let scale = 1
+              let zIndex = 50
+              let opacity = 1
+              let translateX = 0
+
+              if (adjustedPos === 0) {
+                // Center card - large
+                scale = 1
+                zIndex = 50
+                opacity = 1
+                translateX = 0
+              } else if (adjustedPos === -1 || adjustedPos === 1) {
+                // Adjacent cards - medium
+                scale = 0.75
+                zIndex = 40
+                opacity = 0.8
+                translateX = adjustedPos * 250
+              } else if (adjustedPos === -2 || adjustedPos === 2) {
+                // Outer cards - small
+                scale = 0.5
+                zIndex = 30
+                opacity = 0.5
+                translateX = adjustedPos * 215
+              }
+
+              return (
+                <motion.div
+                key={item.id}
+                className="absolute"
+                initial={false}
+                animate={{
+                  scale,
+                  x: translateX,
+                  opacity,
+                  zIndex,
+                }}
+                transition={{
+                  duration: 0.5,
+                  ease: "easeInOut"
+                }}
+                style={{ width: '280px', willChange: adjustedPos >= -1 && adjustedPos <= 1 ? 'transform, opacity' : 'auto' }}
+              >
+                <div className="relative group h-full">
+                  {/* Stock Banners */}
+                  {availableStock > 1 && availableStock <= 10 && (
+                    <div className="absolute top-0 -right-5 text-white text-center py-1 px-3 rounded-xl font-bold text-sm z-10 pointer-events-none select-none"
+                      style={{ 
+                        transform: 'rotate(20deg)',
+                        backgroundColor: tierStyles.bannerColor,
+                        boxShadow: tierStyles.bannerGlow
+                      }}>
+                      Only {availableStock} Left!
+                    </div>
+                  )}
+                  
+                  {isLastOne && (
+                    <div className="absolute top-0 -right-5 text-white text-center py-1 px-3 rounded-xl font-bold text-sm z-10 pointer-events-none select-none"
+                      style={{ 
+                        transform: 'rotate(20deg)',
+                        backgroundColor: tierStyles.bannerColor,
+                        boxShadow: tierStyles.bannerGlow
+                      }}>
+                      Last One!
+                    </div>
+                  )}
+                  
+                  {isOutOfStock && (
+                    <div className="absolute inset-0 bg-black/80 rounded-2xl flex items-center justify-center z-50 select-none">
+                      <div className="text-white font-extrabold text-2xl text-center">
+                        OUT OF<br />STOCK
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="transition-all duration-200 h-full" style={{aspectRatio: '1180/1756'}}>
+                    <div 
+                      className={`relative flex flex-col items-center justify-end shadow-2xl border-2 transition-all duration-200 w-full h-full overflow-hidden ${tierStyles.className}`}
+                      style={{
+                        borderRadius: '10px',
+                        borderColor: tierStyles.borderColor,
+                        backgroundImage: `url(/${tier}.png)`,
+                        backgroundSize: '100% 100%',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        ...(adjustedPos === 0 ? {
+                          boxShadow: `0 0 30px ${tierStyles.borderColor}ee, 0 0 60px ${tierStyles.borderColor}88, 0 0 90px ${tierStyles.borderColor}44`
+                        } : {})
+                      }}
+                    >
+                      {isLastOne && adjustedPos !== 0 && (
+                        <div 
+                          className="absolute inset-[-2px] border-2 rounded-[10px] pointer-events-none z-50"
+                          style={{
+                            borderColor: tierStyles.bannerColor,
+                            boxShadow: tierStyles.bannerGlow,
+                          }}
+                        />
+                      )}
+                      
+                      <div className="w-full flex-1 px-3 pt-10 pb-3 flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={(item as any).image || `https://via.placeholder.com/300x200/333333/FFFFFF?text=${encodeURIComponent(item.name)}`}
+                          alt={item.name}
+                          className="w-full h-full object-cover rounded-xl"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </div>
+                      
+                      <div className="px-3 pb-5 w-full flex flex-col gap-1 items-center">
+                        <div className="pl-3 font-extrabold text-lg text-left w-full text-white drop-shadow-lg">{item.name}</div>
+                        
+                        <div className="mb-0 pl-3 pb-5 text-left w-full flex items-center gap-2 font-medium text-white">
+                          <img src="/pts.png" alt="Points" className="w-6 h-6" />
+                          <span className="font-bold text-lg text-yellow-300">{item.points.toLocaleString()}</span>
+                        </div>
+                        
+                        <motion.button
+                          type="button"
+                          className={`px-3 py-1.5 rounded-lg font-bold shadow transition mt-auto text-sm border-2 ${
+                            isOutOfStock ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : ''
+                          }`}
+                          style={{
+                            width: '60%',
+                            borderColor: isOutOfStock ? 'rgba(255, 255, 255, 0.2)' : tierStyles.buttonBorderColor,
+                            boxShadow: 'none',
+                            ...(isOutOfStock ? {} : {
+                              background: isLastOne 
+                                ? `linear-gradient(180deg, ${tierStyles.bannerColor} 0%, ${tierStyles.bannerColor}aa 100%)`
+                                : `linear-gradient(180deg, ${tierStyles.buttonColor} 0%, ${tierStyles.buttonColor}aa 100%)`,
+                              color: 'white'
+                            })
+                          }}
+                          onClick={() => !isOutOfStock && adjustedPos === 0 && setSelectedReward(item)}
+                          disabled={isOutOfStock || adjustedPos !== 0}
+                          whileHover={!isOutOfStock && adjustedPos === 0 ? { scale: 1.05 } : {}}
+                          whileTap={!isOutOfStock && adjustedPos === 0 ? { scale: 0.95 } : {}}
+                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                          onMouseEnter={e => {
+                            if (!isOutOfStock && adjustedPos === 0) {
+                              e.currentTarget.style.boxShadow = `0 0 12px ${tierStyles.buttonBorderColor}, 0 0 24px ${tierStyles.buttonBorderColor}`;
+                            }
+                          }}
+                          onMouseLeave={e => {
+                            if (!isOutOfStock && adjustedPos === 0) {
+                              e.currentTarget.style.boxShadow = 'none';
+                            }
+                          }}
+                        >
+                          {isOutOfStock ? 'OUT OF STOCK' : 'CLAIM NOW'}
+                        </motion.button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )
+          })}
         </div>
       </div>
       {/* Mobile Filter Drawer */}
@@ -353,6 +585,18 @@ export default function Home() {
       <div className="flex flex-1 w-full overflow-visible">
         {/* Sidebar - Active Filters (Desktop) */}
         <aside className="hidden md:flex flex-col w-72 bg-gray-800 rounded-xl mx-8 my-0 p-6 shadow-lg">
+          {/* Points Range Slider - Best UX */}
+          <div className="mb-6">
+            <PointsRangeSlider
+              min={MIN_POINTS}
+              max={MAX_POINTS}
+              value={pointsRange}
+              onChange={(val) => {
+                setPointsRange(val)
+                setCurrentPage(1)
+              }}
+            />
+          </div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-yellow-400">Active Filters</h3>
             {activeFilterCount > 0 && (
@@ -363,75 +607,6 @@ export default function Home() {
                 Clear All ({activeFilterCount})
               </button>
             )}
-          </div>
-          
-          {/* Points Range Slider */}
-          <div className="mb-6">
-            <h4 className="text-sm font-semibold text-gray-300 mb-3">💰 Points Range</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between text-xs text-gray-400">
-                <span>{pointsRange[0].toLocaleString()}</span>
-                <span>{pointsRange[1].toLocaleString()}</span>
-              </div>
-              <div className="relative">
-                <input
-                  type="range"
-                  min={MIN_POINTS}
-                  max={MAX_POINTS}
-                  value={pointsRange[0]}
-                  onChange={(e) => {
-                    const val = Number(e.target.value)
-                    if (val <= pointsRange[1]) {
-                      setPointsRange([val, pointsRange[1]])
-                      setCurrentPage(1)
-                    }
-                  }}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
-                />
-                <input
-                  type="range"
-                  min={MIN_POINTS}
-                  max={MAX_POINTS}
-                  value={pointsRange[1]}
-                  onChange={(e) => {
-                    const val = Number(e.target.value)
-                    if (val >= pointsRange[0]) {
-                      setPointsRange([pointsRange[0], val])
-                      setCurrentPage(1)
-                    }
-                  }}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500 mt-2"
-                />
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  value={pointsRange[0]}
-                  onChange={(e) => {
-                    const val = Number(e.target.value)
-                    if (val >= MIN_POINTS && val <= pointsRange[1]) {
-                      setPointsRange([val, pointsRange[1]])
-                      setCurrentPage(1)
-                    }
-                  }}
-                  className="w-1/2 px-2 py-1 text-xs bg-gray-900 border border-gray-700 rounded text-white"
-                  placeholder="Min"
-                />
-                <input
-                  type="number"
-                  value={pointsRange[1]}
-                  onChange={(e) => {
-                    const val = Number(e.target.value)
-                    if (val <= MAX_POINTS && val >= pointsRange[0]) {
-                      setPointsRange([pointsRange[0], val])
-                      setCurrentPage(1)
-                    }
-                  }}
-                  className="w-1/2 px-2 py-1 text-xs bg-gray-900 border border-gray-700 rounded text-white"
-                  placeholder="Max"
-                />
-              </div>
-            </div>
           </div>
 
           {/* Category Filter */}
@@ -521,23 +696,32 @@ export default function Home() {
             const isLowStock = availableStock <= 10 && availableStock >= 2
             const isLastOne = availableStock === 1
             const isOutOfStock = availableStock === 0
-            const tier = getTier(item.points, item.name)
+            const tier = (item as any).tier || getTier(item.points, item.name)
+            console.log('Card tier:', tier, 'for item:', item.name, 'background will be:', `/${tier}.png`)
             const tierStyles = getTierStyles(tier)
             
             return (
             <div key={item.id} className={`relative hover:scale-105 transition-all duration-200 h-full group ${(isLowStock || isLastOne) ? 'z-10 hover:z-30' : 'z-0 hover:z-30'} ${isOutOfStock ? 'cursor-not-allowed' : ''}`} style={{ overflow: 'visible' }}>
               {/* Low Stock Banner (2-10 items) - Plain overlay */}
               {isLowStock && (
-                      <div className="absolute top-0 -right-7 bg-orange-500 text-white text-center py-1 px-3 rounded-xl font-bold text-xs shadow-lg z-10 group-hover:z-50 pointer-events-none select-none"
-                      style={{ transform: 'rotate(20deg)' }}>
+                      <div className="absolute top-0 -right-7 text-white text-center py-1 px-3 rounded-xl font-bold text-xs shadow-lg z-10 group-hover:z-50 pointer-events-none select-none"
+                      style={{ 
+                        transform: 'rotate(20deg)',
+                        backgroundColor: tierStyles.bannerColor,
+                        boxShadow: tierStyles.bannerGlow
+                      }}>
                         Only {availableStock} Left!
                       </div>
               )}
               
               {/* Last One Banner (1 item) - Animated overlay */}
               {isLastOne && (
-                      <div className="absolute top-0 -right-5 bg-red-600 text-white text-center py-1 px-3 rounded-xl font-bold text-sm animate-banner-glow z-10 group-hover:z-50 pointer-events-none select-none"
-                      style={{ transform: 'rotate(20deg)' }}>
+                      <div className="absolute top-0 -right-5 text-white text-center py-1 px-3 rounded-xl font-bold text-sm z-10 group-hover:z-50 pointer-events-none select-none"
+                      style={{ 
+                        transform: 'rotate(20deg)',
+                        backgroundColor: tierStyles.bannerColor,
+                        boxShadow: tierStyles.bannerGlow
+                      }}>
                         Last One!
                       </div>
               )}
@@ -551,29 +735,31 @@ export default function Home() {
                       </div>
               )}
               
-              <div className="transition-all duration-200 h-full">
+              <div className="transition-all duration-200 h-full" style={{aspectRatio: '1180/1756'}}>
               <div 
-                className={`flex flex-col items-center rounded-2xl shadow-2xl border-2 transition-all duration-200 h-full ${tierStyles.className} ${
-                  isLastOne 
-                    ? 'border-red-500' 
-                    : ''
-                }`} 
+                className={`relative flex flex-col items-center justify-end shadow-2xl border-2 transition-all duration-200 w-full h-full overflow-hidden ${tierStyles.className}`}
                 style={{
-                  borderColor: isLastOne ? '#ef4444' : tierStyles.borderColor,
-                  animation: isLastOne ? 'pulseGlow 1.5s ease-in-out infinite' : tierStyles.animation,
-                  ...(isLastOne && {
-                    boxShadow: '0 0 20px rgba(239, 68, 68, 0.7), 0 0 40px rgba(239, 68, 68, 0.4)',
-                  })
+                  borderRadius: '10px',
+                  borderColor: tierStyles.borderColor,
+                  animation: tierStyles.animation,
+                  backgroundImage: `url(/${tier}.png)`,
+                  backgroundSize: '100% 100%',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
                 }}
               >
+                {/* Animated border and glow layer for last one */}
+                {isLastOne && (
+                  <div 
+                    className="absolute inset-[-2px] border-2 rounded-[10px] animate-pulse pointer-events-none z-50"
+                    style={{
+                      borderColor: tierStyles.bannerColor,
+                      boxShadow: tierStyles.bannerGlow,
+                    }}
+                  />
+                )}
               {/* Image - 100% width & height */}
-              <div className={`w-full h-48 rounded-t-xl px-3 py-3 flex items-center justify-center overflow-hidden ${
-                tier === 'black-diamond' ? 'bg-transparent' :
-                tier === 'diamond' ? 'bg-transparent' :
-                tier === 'gold' ? 'bg-transparent' :
-                tier === 'silver' ? 'bg-transparent' :
-                'bg-transparent'
-              }`}>
+              <div className="w-full h-48 rounded-t-xl px-3 py-3 flex items-center justify-center overflow-hidden">
                 <img 
                   src={(item as any).image || `https://via.placeholder.com/300x200/333333/FFFFFF?text=${encodeURIComponent(item.name)}`}
                   alt={item.name}
@@ -581,33 +767,52 @@ export default function Home() {
                 />
               </div>
               
-              <div className="px-3 py-3 w-full flex flex-col gap-1">
+              <div className="px-3 py-3 w-full flex flex-col gap-1 items-center">
               {/* Reward Name - Left aligned */}
-              <div className={`font-extrabold text-lg text-left w-full ${tierStyles.textColor}`}>{item.name}</div>
+              <div className="font-extrabold text-lg text-left w-full text-white drop-shadow-lg">{item.name}</div>
               
               {/* Points with token icon - Left aligned */}
-              <div className={`mb-0 text-left w-full flex items-center gap-2 font-medium ${tierStyles.textColor}`}>
-                <span className="text-xl">🪙</span>
-                <span className={`${tierStyles.pointsColor} font-bold text-lg`}>{item.points.toLocaleString()}</span>
+              <div className="mb-0 text-left w-full flex items-center gap-2 font-medium text-white">
+                <img src="/pts.png" alt="Points" className="w-6 h-6" />
+                <span className="font-bold text-lg text-yellow-300">{item.points.toLocaleString()}</span>
               </div>
               
               {/* Claim Button */}
               <motion.button
                 type="button"
-                className={`px-6 py-2 rounded-lg font-bold shadow transition w-full mt-auto ${
+                className={`px-3 py-1.5 rounded-lg font-bold shadow transition mt-auto text-sm border-2 ${
                   isOutOfStock
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : isLastOne 
-                    ? 'bg-red-600 text-white hover:bg-red-700 animate-pulse' 
-                    : tierStyles.buttonBg
+                    : ''
                 }`}
+                style={{
+                  width: '60%',
+                  borderColor: isOutOfStock ? 'rgba(255, 255, 255, 0.2)' : tierStyles.buttonBorderColor,
+                  boxShadow: 'none',
+                  ...(isOutOfStock ? {} : {
+                    background: isLastOne 
+                      ? `linear-gradient(180deg, ${tierStyles.bannerColor} 0%, ${tierStyles.bannerColor}aa 100%)`
+                      : `linear-gradient(180deg, ${tierStyles.buttonColor} 0%, ${tierStyles.buttonColor}aa 100%)`,
+                    color: 'white'
+                  })
+                }}
                 onClick={() => !isOutOfStock && setSelectedReward(item)}
                 disabled={isOutOfStock}
                 whileHover={!isOutOfStock ? { scale: 1.05 } : {}}
                 whileTap={!isOutOfStock ? { scale: 0.95 } : {}}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                onMouseEnter={e => {
+                  if (!isOutOfStock) {
+                    e.currentTarget.style.boxShadow = `0 0 12px ${tierStyles.buttonBorderColor}, 0 0 24px ${tierStyles.buttonBorderColor}`;
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isOutOfStock) {
+                    e.currentTarget.style.boxShadow = 'none';
+                  }
+                }}
               >
-                {isOutOfStock ? 'OUT OF STOCK' : isLastOne ? 'CLAIM NOW!' : 'CLAIM'}
+                {isOutOfStock ? 'OUT OF STOCK' : 'CLAIM NOW'}
               </motion.button>
               </div>
               </div>
@@ -684,10 +889,14 @@ export default function Home() {
             setClaimStatus(null);
             setIsChecking(false);
           }}>
-            <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-lg w-full border-2 border-blue-500 animate-scaleIn" onClick={(e) => e.stopPropagation()}>
+            <div className="shadow-2xl p-8 max-w-lg w-full animate-scaleIn relative overflow-hidden" style={{ 
+              borderRadius: '20px',
+              background: 'linear-gradient(#1F2937, #1F2937) padding-box, linear-gradient(135deg, #FF7901, #FFA323) border-box',
+              border: '2px solid transparent'
+            }} onClick={(e) => e.stopPropagation()}>
               {/* Close button */}
               <button 
-                className="absolute top-4 right-4 text-gray-400 hover:text-white text-3xl font-bold"
+                className="absolute -top-1 right-0 text-gray-400 hover:text-white text-3xl font-bold w-12 h-12 flex items-center justify-center"
                 onClick={() => {
                   setShowClaimsChecker(false);
                   setCheckClaimId('');
@@ -700,7 +909,7 @@ export default function Home() {
               
               {/* Header */}
               <div className="text-center mb-6">
-                <h2 className="text-3xl font-extrabold text-blue-400 mb-2">Claims Checker</h2>
+                <h2 className="text-3xl font-extrabold mb-2" style={{ background: 'linear-gradient(135deg, #FF7901, #FFA323)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Claims Checker</h2>
                 <p className="text-gray-300 text-sm">Please enter your Request ID so you can see the status of your request</p>
               </div>
               
@@ -712,12 +921,15 @@ export default function Home() {
                     value={checkClaimId}
                     onChange={(e) => setCheckClaimId(e.target.value.toUpperCase())}
                     placeholder="Enter Request ID (e.g., CLM-XY7K4M9B2)"
-                    className="w-full px-4 py-3 pr-12 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
+                    className="w-full px-4 py-3 pr-12 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none transition"
+                    // style removed: focusBorderColor is not a valid CSS property
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#FF7901'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#4B5563'}
                     disabled={isChecking}
                   />
                   {isChecking && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <div className="w-6 h-6 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-6 h-6 border-3 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#FF7901', borderTopColor: 'transparent' }}></div>
                     </div>
                   )}
                 </div>
@@ -780,11 +992,24 @@ export default function Home() {
                   }
                 }}
                 disabled={!checkClaimId.trim() || isChecking}
-                className={`w-full py-3 rounded-lg font-bold text-lg transition shadow-lg ${
+                className={`w-full py-3 rounded-lg font-bold text-lg transition shadow-lg border-2 ${
                   !checkClaimId.trim() || isChecking
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'text-white'
                 }`}
+                style={!checkClaimId.trim() || isChecking ? {} : { background: 'linear-gradient(135deg, #FF7901 0%, #FFA323 100%)', borderColor: '#FFA323', boxShadow: 'none' }}
+                onMouseEnter={(e) => {
+                  if (!(!checkClaimId.trim() || isChecking)) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #E66D01 0%, #E69320 100%)';
+                    e.currentTarget.style.boxShadow = '0 0 12px #FFA323, 0 0 24px #FFA323';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!(!checkClaimId.trim() || isChecking)) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #FF7901 0%, #FFA323 100%)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }
+                }}
               >
                 {isChecking ? 'Checking...' : 'Check Claim'}
               </button>
@@ -886,21 +1111,22 @@ export default function Home() {
             transition={{ duration: 0.2 }}
           >
             <motion.div 
-              className="bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-4xl w-full text-yellow-100 relative max-h-[90vh] overflow-y-auto" 
+              className="rounded-2xl shadow-2xl p-8 max-w-4xl w-full text-yellow-100 relative max-h-[90vh] overflow-y-auto" 
+              style={{ background: 'linear-gradient(135deg, #0A1F30 0%, #0B3151 100%)' }}
               onClick={(e) => e.stopPropagation()}
               initial={{ scale: 0.9, opacity: 0, y: 30 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 30 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
             >
-              <button className="absolute top-4 right-4 text-gray-400 hover:text-yellow-300 text-3xl font-bold z-10" onClick={() => setSelectedReward(null)}>&times;</button>
+              <button className="absolute top-0 right-3 text-gray-400 hover:text-yellow-300 text-3xl font-bold z-10" onClick={() => setSelectedReward(null)}>&times;</button>
               
               {/* First Row - 2 Columns */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* Column 1: Image and Gallery */}
-                <div className="flex flex-col gap-3 h-full">
+                <div className="flex flex-col gap-2 h-full">
                   {/* Main Display Image */}
-                  <div className="flex-1 bg-gray-900 rounded-xl flex items-center justify-center overflow-hidden border-2 border-yellow-700 relative">
+                  <div className="h-64 bg-gray-900 rounded-xl flex items-center justify-center overflow-hidden border-2 border-yellow-700 relative">
                     <img 
                       src={
                         (selectedReward as any).galleries && selectedVariant && (selectedReward as any).galleries[selectedVariant]
@@ -912,13 +1138,13 @@ export default function Home() {
                     />
                   </div>
                   {/* Gallery Thumbnails */}
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-1.5 max-w-xs justify-center mx-auto">
                     {[0, 1, 2, 3].map((idx) => (
                       <div 
                         key={idx} 
-                        className={`aspect-square bg-gray-700 rounded-lg border-2 cursor-pointer transition flex items-center justify-center overflow-hidden relative ${
+                        className={`aspect-square bg-gray-700 rounded border cursor-pointer transition flex items-center justify-center overflow-hidden relative ${
                           selectedGalleryImage === idx 
-                            ? 'border-yellow-500 ring-2 ring-yellow-500' 
+                            ? 'border-yellow-500 ring-1 ring-yellow-500' 
                             : 'border-gray-600 hover:border-yellow-400'
                         }`}
                         onClick={() => setSelectedGalleryImage(idx)}
@@ -941,23 +1167,23 @@ export default function Home() {
                 </div>
 
                 {/* Column 2: Reward Details */}
-                <div className="flex flex-col gap-4 h-full">
+                <div className="flex flex-col gap-2 h-full">
                   {/* Reward Name */}
-                  <h2 className="font-extrabold text-3xl text-yellow-200">{selectedReward.name}</h2>
+                  <h2 className="font-extrabold text-2xl text-yellow-200">{selectedReward.name}</h2>
                   
                   {/* Extra Detail */}
-                  <p className="text-sm text-gray-400">Premium quality reward from our exclusive collection. Limited availability.</p>
+                  <p className="text-xs text-gray-400">Premium quality reward from our exclusive collection. Limited availability.</p>
                   
                   {/* Variant Options */}
                   {(selectedReward as any).variants && (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <label className="text-sm font-semibold text-gray-300 uppercase">
                         Select {(selectedReward as any).variants.type}:
                       </label>
                       
                       {(selectedReward as any).variants.type === 'color' ? (
                         /* Colored circle buttons for color variants */
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-1">
                           {(selectedReward as any).variants.options.map((option: string) => {
                             const colorMap: { [key: string]: string } = {
                               'Black': '#000000',
@@ -989,7 +1215,7 @@ export default function Home() {
                                   setSelectedVariant(option)
                                   setSelectedGalleryImage(0)
                                 }}
-                                className={`relative w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                                className={`relative w-6 h-6 rounded-full border-2 transition-all hover:scale-110 ${
                                   selectedVariant === option
                                     ? 'border-yellow-400 ring-2 ring-yellow-400/50'
                                     : 'border-gray-600 hover:border-gray-400'
@@ -1030,13 +1256,13 @@ export default function Home() {
                   )}
                   
                   {/* Points */}
-                  <div className="flex items-center gap-2 text-2xl font-bold">
-                    <span className="text-3xl">🪙</span>
+                  <div className="flex items-center gap-2 text-xl font-bold">
+                    <span className="text-2xl">🪙</span>
                     <span className="text-yellow-300">{selectedReward.points.toLocaleString()} Points</span>
                   </div>
                   
                   {/* Claiming Steps */}
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                  <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
                     <h3 className="font-bold text-sm text-yellow-400 mb-2">📋 Claiming Process:</h3>
                     <ol className="text-xs text-gray-300 space-y-1 list-decimal list-inside">
                       <li>Fill out the claim form below</li>
@@ -1049,9 +1275,9 @@ export default function Home() {
               </div>
 
               {/* Second Row - Claim Form */}
-              <div className="border-t border-gray-700 pt-6">
-                <h3 className="font-bold text-xl text-yellow-300 mb-4">Complete Your Claim</h3>
-                <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={async (e) => { 
+              <div className="border-t border-gray-700 pt-4">
+                <h3 className="font-bold text-lg text-yellow-300 mb-3">Complete Your Claim</h3>
+                <form className="grid grid-cols-1 md:grid-cols-2 gap-3" onSubmit={async (e) => { 
                   e.preventDefault(); 
                   
                   const formData = new FormData(e.currentTarget);
@@ -1086,63 +1312,103 @@ export default function Home() {
                     alert('Failed to submit claim. Please try again.');
                   }
                 }}>
-                  {/* Common Fields */}
-                  <input 
-                    type="text" 
-                    name="username"
-                    placeholder="Username" 
-                    className="border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500" 
-                    required 
-                  />
-                  <input 
-                    type="text" 
-                    name="fullName"
-                    placeholder="Full Name" 
-                    className="border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500" 
-                    required 
-                  />
-                  <input 
-                    type="tel" 
-                    name="phoneNumber"
-                    placeholder="Phone Number" 
-                    className="border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500" 
-                    required 
-                  />
-                  
-                  {/* Conditional Fields based on category */}
+                  {/* E-wallet Category Fields Only */}
                   {(selectedReward as any).category === 'E-wallet' ? (
                     <>
-                      <input 
-                        type="text" 
-                        name="ewalletName"
-                        placeholder="E-wallet Name (GCash/Maya)" 
-                        className="border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500" 
-                        required 
-                      />
-                      <input 
-                        type="text" 
-                        name="ewalletAccount"
-                        placeholder="E-wallet Account Number" 
-                        className="md:col-span-2 border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500" 
-                        required 
-                      />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:col-span-2">
+                        <input 
+                          type="text" 
+                          name="username"
+                          placeholder="Username" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="text" 
+                          name="fullName"
+                          placeholder="Full Name" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="email" 
+                          name="email"
+                          placeholder="Email" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:col-span-2">
+                        <input 
+                          type="text" 
+                          name="ewalletName"
+                          placeholder="E-wallet Name (GCash/Maya)" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="text" 
+                          name="ewalletAccount"
+                          placeholder="E-wallet Account Number" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                      </div>
                     </>
                   ) : (
-                    <textarea 
-                      name="deliveryAddress"
-                      placeholder="Complete Delivery Address" 
-                      className="md:col-span-2 border border-gray-600 rounded-lg px-4 py-3 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 min-h-[100px]" 
-                      required 
-                    />
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:col-span-2">
+                        <input 
+                          type="text" 
+                          name="username"
+                          placeholder="Username" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="text" 
+                          name="fullName"
+                          placeholder="Full Name" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="email" 
+                          name="email"
+                          placeholder="Email" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:col-span-2">
+                        <input 
+                          type="tel" 
+                          name="phoneNumber"
+                          placeholder="Phone Number" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                        <input 
+                          type="text"
+                          name="deliveryAddress"
+                          placeholder="Complete Delivery Address" 
+                          className="border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-yellow-100 focus:outline-none focus:border-yellow-500 text-sm w-full" 
+                          required 
+                        />
+                      </div>
+                    </>
                   )}
                   
                   {/* Submit Button */}
                   <motion.button 
                     type="submit" 
-                    className="md:col-span-2 bg-yellow-600 text-black px-6 py-3 rounded-lg font-bold text-lg shadow-lg hover:bg-yellow-500 transition mt-2"
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(234, 179, 8, 0.5)" }}
+                    className="md:col-span-2 text-white px-4 py-2 rounded-lg font-bold text-base shadow-lg transition mt-1 mx-auto block border-2" 
+                    style={{ width: '40%', background: 'linear-gradient(180deg, #FF7901 0%, #FFA323 100%)', borderColor: '#FFA323', boxShadow: 'none' }}
+                    whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(180deg, #E66D01 0%, #E69320 100%)'; e.currentTarget.style.boxShadow = '0 0 12px #FFA323, 0 0 24px #FFA323'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(180deg, #FF7901 0%, #FFA323 100%)'; e.currentTarget.style.boxShadow = 'none'; }}
                   >
                     Confirm Claim
                   </motion.button>
