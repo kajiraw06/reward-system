@@ -1,20 +1,15 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { validateClaimInput, ValidationError } from '@/lib/validation'
+import { successResponse, errorResponse, validationErrorResponse, serverErrorResponse } from '@/lib/apiResponse'
 
 // POST - Submit a claim
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const {
-      rewardId,
-      variantOption,
-      username,
-      fullName,
-      phoneNumber,
-      deliveryAddress,
-      ewalletName,
-      ewalletAccount
-    } = body
+    
+    // Validate input
+    const validatedData = validateClaimInput(body)
 
     // Generate claim ID
     const claimId = 'CLM-' + Math.random().toString(36).substr(2, 9).toUpperCase()
@@ -28,24 +23,46 @@ export async function POST(request: Request) {
     // If tables don't exist yet, return mock success
     if (testError && testError.message.includes('relation')) {
       console.log('Database not ready, returning mock claim ID')
-      return NextResponse.json({ 
-        success: true, 
-        claimId,
-        message: 'Database not configured. This is a demo claim ID.' 
-      })
+      return successResponse(
+        { claimId },
+        'Database not configured. This is a demo claim ID.'
+      )
+    }
+
+    // Verify reward exists and has stock
+    const { data: reward, error: rewardError } = await supabase
+      .from('rewards')
+      .select('id, name, quantity')
+      .eq('id', validatedData.rewardId)
+      .single()
+
+    if (rewardError) {
+      if (rewardError.code === 'PGRST116') {
+        return errorResponse('Reward not found', 404)
+      }
+      throw rewardError
+    }
+
+    if (reward.quantity <= 0) {
+      return errorResponse(`Sorry, "${reward.name}" is currently out of stock`, 400)
     }
 
     // Get variant_id if variant is selected
     let variantId = null
-    if (variantOption) {
+    if (validatedData.variantOption) {
       const { data: variant, error: variantError } = await supabase
         .from('reward_variants')
         .select('id')
-        .eq('reward_id', rewardId)
-        .eq('option_name', variantOption)
+        .eq('reward_id', validatedData.rewardId)
+        .eq('option_name', validatedData.variantOption)
         .single()
 
-      if (variantError) throw variantError
+      if (variantError) {
+        if (variantError.code === 'PGRST116') {
+          return errorResponse(`Variant "${validatedData.variantOption}" not found for this reward`, 404)
+        }
+        throw variantError
+      }
       variantId = variant.id
     }
 
@@ -54,14 +71,14 @@ export async function POST(request: Request) {
       .from('claims')
       .insert({
         claim_id: claimId,
-        reward_id: rewardId,
+        reward_id: validatedData.rewardId,
         variant_id: variantId,
-        username,
-        full_name: fullName,
-        phone_number: phoneNumber,
-        delivery_address: deliveryAddress,
-        ewallet_name: ewalletName,
-        ewallet_account: ewalletAccount,
+        username: validatedData.username,
+        full_name: validatedData.fullName,
+        phone_number: validatedData.phoneNumber,
+        delivery_address: validatedData.deliveryAddress,
+        ewallet_name: validatedData.ewalletName,
+        ewallet_account: validatedData.ewalletAccount,
         status: 'pending'
       })
       .select()
@@ -69,10 +86,18 @@ export async function POST(request: Request) {
 
     if (claimError) throw claimError
 
-    return NextResponse.json({ success: true, claimId, claim })
+    return successResponse(
+      { claimId, claim },
+      'Claim submitted successfully! You will receive an update once processed.'
+    )
   } catch (error: any) {
     console.error('Error submitting claim:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    
+    if (error.name === 'ValidationError') {
+      return validationErrorResponse(error.message)
+    }
+    
+    return serverErrorResponse(error)
   }
 }
 
@@ -83,7 +108,11 @@ export async function GET(request: Request) {
     const claimId = searchParams.get('claimId')
 
     if (!claimId) {
-      return NextResponse.json({ error: 'Claim ID required' }, { status: 400 })
+      return validationErrorResponse('Claim ID is required')
+    }
+
+    if (claimId.length < 5 || claimId.length > 50) {
+      return validationErrorResponse('Invalid claim ID format')
     }
 
     // Check if database is ready
@@ -117,12 +146,12 @@ export async function GET(request: Request) {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
+        return errorResponse('Claim not found. Please check your claim ID and try again.', 404)
       }
       throw error
     }
 
-    return NextResponse.json({
+    return successResponse({
       claimId: claim.claim_id,
       rewardName: claim.reward?.name || 'Unknown Reward',
       points: claim.reward?.points || 0,
@@ -137,6 +166,6 @@ export async function GET(request: Request) {
     })
   } catch (error: any) {
     console.error('Error checking claim:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverErrorResponse(error)
   }
 }

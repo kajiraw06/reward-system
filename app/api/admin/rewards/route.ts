@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { validateRewardInput, validateUUID, ValidationError } from '@/lib/validation'
+import { successResponse, errorResponse, validationErrorResponse, serverErrorResponse } from '@/lib/apiResponse'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,10 +48,10 @@ export async function GET(request: NextRequest) {
       }, {})
     }))
 
-    return NextResponse.json(transformedRewards)
+    return successResponse(transformedRewards)
   } catch (error: any) {
     console.error('Error fetching rewards:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverErrorResponse(error)
   }
 }
 
@@ -59,15 +61,51 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const { id, name, points, category, quantity, variantType, variantOptions, galleries } = body
 
+    // Validate reward ID
+    if (!id) {
+      return validationErrorResponse('Reward ID is required')
+    }
+    
+    try {
+      validateUUID(id, 'Reward ID')
+    } catch (error: any) {
+      return validationErrorResponse(error.message)
+    }
+
+    // Validate reward data
+    const validatedData = validateRewardInput({
+      name,
+      points,
+      category,
+      quantity,
+      variantType,
+      variantOptions,
+      galleries
+    })
+
+    // Check if reward exists
+    const { data: existingReward, error: checkError } = await supabase
+      .from('rewards')
+      .select('id, name')
+      .eq('id', id)
+      .single()
+
+    if (checkError) {
+      if (checkError.code === 'PGRST116') {
+        return errorResponse('Reward not found', 404)
+      }
+      throw checkError
+    }
+
     // Update reward basic info
     const { error: updateError } = await supabase
       .from('rewards')
       .update({
-        name,
-        points: parseInt(points),
-        category,
-        quantity: parseInt(quantity),
-        variant_type: variantType,
+        name: validatedData.name,
+        points: validatedData.points,
+        category: validatedData.category,
+        quantity: validatedData.quantity,
+        variant_type: validatedData.variantType,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -81,7 +119,9 @@ export async function PATCH(request: NextRequest) {
       .eq('reward_id', id)
 
     const currentOptions = currentVariants?.map(v => v.option_name) || []
-    const newOptions = variantOptions.split(',').map((s: string) => s.trim()).filter((s: string) => s)
+    const newOptions = validatedData.variantOptions 
+      ? validatedData.variantOptions.split(',').map((s: string) => s.trim()).filter((s: string) => s)
+      : []
 
     // Delete removed variants
     const toDelete = currentVariants?.filter(v => !newOptions.includes(v.option_name)) || []
@@ -106,7 +146,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update galleries if provided
-    if (galleries) {
+    if (validatedData.galleries) {
       // Get updated variant list
       const { data: updatedVariants } = await supabase
         .from('reward_variants')
@@ -124,7 +164,7 @@ export async function PATCH(request: NextRequest) {
         // Prepare all galleries to insert in one batch
         const galleriesToInsert: any[] = []
         for (const variant of updatedVariants) {
-          const variantGalleries = galleries[variant.option_name] || []
+          const variantGalleries = validatedData.galleries![variant.option_name] || []
           if (variantGalleries.length > 0) {
             variantGalleries.forEach((url: string, index: number) => {
               if (url && url.trim()) {
@@ -147,10 +187,15 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, message: 'Reward updated successfully' })
+    return successResponse(null, 'Reward updated successfully')
   } catch (error: any) {
     console.error('Error updating reward:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    
+    if (error.name === 'ValidationError') {
+      return validationErrorResponse(error.message)
+    }
+    
+    return serverErrorResponse(error)
   }
 }
 
@@ -161,7 +206,14 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get('id')
 
     if (!id) {
-      return NextResponse.json({ error: 'Reward ID is required' }, { status: 400 })
+      return validationErrorResponse('Reward ID is required')
+    }
+
+    // Validate UUID format
+    try {
+      validateUUID(id, 'Reward ID')
+    } catch (error: any) {
+      return validationErrorResponse(error.message)
     }
 
     // Check if there are any claims for this reward
@@ -173,9 +225,24 @@ export async function DELETE(request: NextRequest) {
     if (claimsError) throw claimsError
 
     if (claims && claims.length > 0) {
-      return NextResponse.json({ 
-        error: `Cannot delete reward. There are ${claims.length} claim(s) associated with this reward. Please delete or reassign the claims first.` 
-      }, { status: 400 })
+      return errorResponse(
+        `Cannot delete reward. There are ${claims.length} claim(s) associated with this reward. Please delete or reassign the claims first.`,
+        400
+      )
+    }
+
+    // Verify reward exists before deleting
+    const { data: reward, error: checkError } = await supabase
+      .from('rewards')
+      .select('id, name')
+      .eq('id', id)
+      .single()
+
+    if (checkError) {
+      if (checkError.code === 'PGRST116') {
+        return errorResponse('Reward not found', 404)
+      }
+      throw checkError
     }
 
     const { error } = await supabase
@@ -185,10 +252,10 @@ export async function DELETE(request: NextRequest) {
 
     if (error) throw error
 
-    return NextResponse.json({ success: true, message: 'Reward deleted successfully' })
+    return successResponse(null, `Reward "${reward.name}" deleted successfully`)
   } catch (error: any) {
     console.error('Error deleting reward:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverErrorResponse(error)
   }
 }
 
@@ -196,17 +263,30 @@ export async function DELETE(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, points, category, quantity, variantType, variantOptions, galleries } = body
+    
+    // Validate reward data
+    const validatedData = validateRewardInput(body)
+
+    // Check for duplicate reward names
+    const { data: existingReward, error: duplicateError } = await supabase
+      .from('rewards')
+      .select('id')
+      .eq('name', validatedData.name)
+      .single()
+
+    if (existingReward) {
+      return errorResponse(`A reward with the name "${validatedData.name}" already exists`, 409)
+    }
 
     // Insert reward
     const { data: reward, error: rewardError } = await supabase
       .from('rewards')
       .insert({
-        name,
-        points: parseInt(points),
-        category,
-        quantity: parseInt(quantity),
-        variant_type: variantType
+        name: validatedData.name,
+        points: validatedData.points,
+        category: validatedData.category,
+        quantity: validatedData.quantity,
+        variant_type: validatedData.variantType
       })
       .select()
       .single()
@@ -214,7 +294,9 @@ export async function POST(request: NextRequest) {
     if (rewardError) throw rewardError
 
     // Insert variants
-    const options = variantOptions.split(',').map((s: string) => s.trim()).filter((s: string) => s)
+    const options = validatedData.variantOptions 
+      ? validatedData.variantOptions.split(',').map((s: string) => s.trim()).filter((s: string) => s)
+      : []
     if (options.length > 0) {
       const { data: variants, error: variantsError } = await supabase
         .from('reward_variants')
@@ -229,10 +311,10 @@ export async function POST(request: NextRequest) {
       if (variantsError) throw variantsError
 
       // Insert galleries if provided - batch all inserts
-      if (galleries && variants) {
+      if (validatedData.galleries && variants) {
         const galleriesToInsert: any[] = []
         for (const variant of variants) {
-          const variantGalleries = galleries[variant.option_name] || []
+          const variantGalleries = validatedData.galleries[variant.option_name] || []
           if (variantGalleries.length > 0) {
             variantGalleries.forEach((url: string, index: number) => {
               if (url && url.trim()) {
@@ -255,9 +337,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, reward })
+    return successResponse({ reward }, 'Reward created successfully', 201)
   } catch (error: any) {
     console.error('Error creating reward:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    
+    if (error.name === 'ValidationError') {
+      return validationErrorResponse(error.message)
+    }
+    
+    return serverErrorResponse(error)
   }
 }

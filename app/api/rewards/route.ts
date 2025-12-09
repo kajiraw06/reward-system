@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { rewards as staticRewards } from '@/app/rewardsData'
+import { successResponse, serverErrorResponse } from '@/lib/apiResponse'
 
 // GET all rewards with their variants and galleries
 export async function GET() {
@@ -73,10 +74,10 @@ export async function GET() {
       })
     )
 
-    return NextResponse.json(rewardsWithDetails)
+    return successResponse(rewardsWithDetails)
   } catch (error: any) {
     console.error('Error fetching rewards:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverErrorResponse(error)
   }
 }
 
@@ -85,6 +86,9 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { name, points, category, quantity, variants, galleries } = body
+    
+    // Note: This endpoint is kept for backwards compatibility
+    // New code should use /api/admin/rewards with full validation
 
     // Insert reward
     const { data: reward, error: rewardError } = await supabase
@@ -132,9 +136,9 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, reward })
+    return successResponse({ reward }, 'Reward created successfully', 201)
   } catch (error: any) {
     console.error('Error creating reward:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverErrorResponse(error)
   }
 }

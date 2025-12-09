@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { validateFileUpload } from '@/lib/validation'
+import { successResponse, errorResponse, validationErrorResponse, serverErrorResponse } from '@/lib/apiResponse'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -10,24 +12,11 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File
     
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
-    }
-
-    // Validate file type (only images)
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-    if (!validTypes.includes(file.type)) {
-      return NextResponse.json({ 
-        error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.' 
-      }, { status: 400 })
-    }
-
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024 // 5MB in bytes
-    if (file.size > maxSize) {
-      return NextResponse.json({ 
-        error: 'File size too large. Maximum size is 5MB.' 
-      }, { status: 400 })
+    // Validate file
+    try {
+      validateFileUpload(file)
+    } catch (error: any) {
+      return validationErrorResponse(error.message)
     }
 
     // Generate unique filename
@@ -45,9 +34,14 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Upload error:', error)
-      return NextResponse.json({ 
-        error: error.message || 'Upload failed. Make sure the storage bucket is configured.' 
-      }, { status: 500 })
+      return errorResponse(
+        error.message || 'Upload failed. Make sure the storage bucket is configured.',
+        500
+      )
+    }
+
+    if (!data) {
+      return errorResponse('Upload failed. No data returned from storage.', 500)
     }
 
     // Get public URL
@@ -55,9 +49,13 @@ export async function POST(request: NextRequest) {
       .from('reward-images')
       .getPublicUrl(filePath)
 
-    return NextResponse.json({ url: publicUrl })
+    if (!publicUrl) {
+      return errorResponse('Failed to generate public URL for uploaded file', 500)
+    }
+
+    return successResponse({ url: publicUrl }, 'File uploaded successfully')
   } catch (error) {
     console.error('Server error:', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return serverErrorResponse(error)
   }
 }

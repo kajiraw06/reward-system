@@ -67,11 +67,11 @@ export const rewards = [
       'Natural Titanium': ['https://placehold.co/400x300/B8956A/FFFFFF?text=Natural+Titanium+1', 'https://placehold.co/400x300/A78660/FFFFFF?text=Natural+Titanium+2', 'https://placehold.co/400x300/C9A474/FFFFFF?text=Natural+Titanium+3', 'https://placehold.co/400x300/BFA06E/FFFFFF?text=Natural+Titanium+4'],
       'Desert Titanium': ['https://placehold.co/400x300/D4A373/FFFFFF?text=Desert+Titanium+1', 'https://placehold.co/400x300/C99768/FFFFFF?text=Desert+Titanium+2', 'https://placehold.co/400x300/DFAF7D/FFFFFF?text=Desert+Titanium+3', 'https://placehold.co/400x300/CFA071/FFFFFF?text=Desert+Titanium+4']
     } },
-  { id: 12, name: 'BMW M2 2025', points: 500000, category: 'Car', quantity: 1, variants: { type: 'color', options: ['Alpine White', 'Black Sapphire', 'San Marino Blue'] }, image: 'https://placehold.co/400x300/F5F5F5/000000?text=Alpine+White+BMW', 
+  { id: 12, name: 'BMW M2 2025', points: 500000, category: 'Car', quantity: 1, variants: { type: 'color', options: ['Alpine White', 'Black Sapphire', 'San Marino Blue'] }, image: '/Front-angled-bmw.png', 
     galleries: {
-      'Alpine White': ['https://placehold.co/400x300/F5F5F5/000000?text=White+BMW+1', 'https://placehold.co/400x300/FAFAFA/000000?text=White+BMW+2', 'https://placehold.co/400x300/EFEFEF/000000?text=White+BMW+3', 'https://placehold.co/400x300/F8F8F8/000000?text=White+BMW+4'],
-      'Black Sapphire': ['https://placehold.co/400x300/1C1C1C/FFFFFF?text=Black+BMW+1', 'https://placehold.co/400x300/0A0A0A/FFFFFF?text=Black+BMW+2', 'https://placehold.co/400x300/262626/FFFFFF?text=Black+BMW+3', 'https://placehold.co/400x300/141414/FFFFFF?text=Black+BMW+4'],
-      'San Marino Blue': ['https://placehold.co/400x300/2B4F81/FFFFFF?text=Blue+BMW+1', 'https://placehold.co/400x300/234570/FFFFFF?text=Blue+BMW+2', 'https://placehold.co/400x300/335A92/FFFFFF?text=Blue+BMW+3', 'https://placehold.co/400x300/2A4D7E/FFFFFF?text=Blue+BMW+4']
+      'Alpine White': ['/Front-angled-bmw.png', '/Front-angled-bmw.png', '/Front-angled-bmw.png', '/Front-angled-bmw.png'],
+      'Black Sapphire': ['/Front-angled-bmw.png', '/Front-angled-bmw.png', '/Front-angled-bmw.png', '/Front-angled-bmw.png'],
+      'San Marino Blue': ['/Front-angled-bmw.png', '/Front-angled-bmw.png', '/Front-angled-bmw.png', '/Front-angled-bmw.png']
     } },
   { id: 15, name: 'Yamaha Aerox 2025', points: 150000, category: 'Car', quantity: 2, variants: { type: 'color', options: ['Matte Black', 'Racing Blue', 'Matte Red'] }, image: 'https://placehold.co/400x300/1A1A1A/FFFFFF?text=Matte+Black+Aerox', 
     galleries: {

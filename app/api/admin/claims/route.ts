@@ -1,11 +1,22 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { validateClaimStatus, ValidationError } from '@/lib/validation'
+import { successResponse, errorResponse, validationErrorResponse, serverErrorResponse } from '@/lib/apiResponse'
 
 // GET - Fetch all claims for admin dashboard
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
+
+    // Validate status filter if provided
+    if (status) {
+      try {
+        validateClaimStatus(status.toLowerCase())
+      } catch (error: any) {
+        return validationErrorResponse(error.message)
+      }
+    }
 
     let query = supabase
       .from('claims')
@@ -17,7 +28,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (status) {
-      query = query.eq('status', status)
+      query = query.eq('status', status.toLowerCase())
     }
 
     const { data: claims, error } = await query
@@ -48,10 +59,10 @@ export async function GET(request: Request) {
       })
     }))
 
-    return NextResponse.json(transformedClaims)
+    return successResponse(transformedClaims)
   } catch (error: any) {
     console.error('Error fetching claims:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverErrorResponse(error)
   }
 }
 
@@ -61,29 +72,62 @@ export async function PATCH(request: Request) {
     const body = await request.json()
     const { claimId, status, rejectionReason } = body
 
+    // Validate required fields
     if (!claimId || !status) {
-      return NextResponse.json({ error: 'Claim ID and status required' }, { status: 400 })
+      return validationErrorResponse('Claim ID and status are required')
+    }
+
+    // Validate claim ID format
+    if (typeof claimId !== 'string' || claimId.length < 5 || claimId.length > 50) {
+      return validationErrorResponse('Invalid claim ID format')
+    }
+
+    // Validate status
+    try {
+      validateClaimStatus(status.toLowerCase())
+    } catch (error: any) {
+      return validationErrorResponse(error.message)
+    }
+
+    // Validate rejection reason if status is rejected
+    if (status.toLowerCase() === 'rejected') {
+      if (!rejectionReason || rejectionReason.trim().length === 0) {
+        return validationErrorResponse('Rejection reason is required when rejecting a claim')
+      }
+      if (rejectionReason.length > 500) {
+        return validationErrorResponse('Rejection reason must be at most 500 characters')
+      }
     }
 
     const updateData: any = {
-      status,
+      status: status.toLowerCase(),
       updated_at: new Date().toISOString()
     }
 
     if (rejectionReason) {
-      updateData.rejection_reason = rejectionReason
+      updateData.rejection_reason = rejectionReason.trim()
     }
 
     // If approving, decrease the reward quantity
-    if (status === 'approved') {
-      // First, get the claim to find the reward_id
+    if (status.toLowerCase() === 'approved') {
+      // First, get the claim to find the reward_id and check current status
       const { data: claim, error: claimError } = await supabase
         .from('claims')
-        .select('reward_id')
+        .select('reward_id, status')
         .eq('claim_id', claimId)
         .single()
 
-      if (claimError) throw claimError
+      if (claimError) {
+        if (claimError.code === 'PGRST116') {
+          return errorResponse('Claim not found', 404)
+        }
+        throw claimError
+      }
+
+      // Prevent double-approval
+      if (claim.status === 'approved') {
+        return errorResponse('This claim has already been approved', 400)
+      }
 
       // Get the current reward quantity
       const { data: reward, error: rewardError } = await supabase
@@ -96,9 +140,10 @@ export async function PATCH(request: Request) {
 
       // Check if item is out of stock
       if (reward.quantity <= 0) {
-        return NextResponse.json({ 
-          error: `This item is already out of stock. Cannot approve claim for "${reward.name}".` 
-        }, { status: 400 })
+        return errorResponse(
+          `This item is already out of stock. Cannot approve claim for "${reward.name}".`,
+          400
+        )
       }
 
       // Decrease quantity by 1
@@ -119,11 +164,20 @@ export async function PATCH(request: Request) {
       .eq('claim_id', claimId)
       .select()
 
-    if (error) throw error
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return errorResponse('Claim not found', 404)
+      }
+      throw error
+    }
 
-    return NextResponse.json({ success: true, data })
+    if (!data || data.length === 0) {
+      return errorResponse('Claim not found', 404)
+    }
+
+    return successResponse(data, `Claim status updated to ${status} successfully`)
   } catch (error: any) {
     console.error('Error updating claim:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverErrorResponse(error)
   }
 }

@@ -45,7 +45,11 @@ export default function Home() {
     const fetchRewards = async () => {
       try {
         const response = await fetch('/api/rewards')
-        const data = await response.json()
+        const result = await response.json()
+        
+        // Handle new API response format with success/data structure
+        const data = result.success ? result.data : result
+        
         setRewards(data)
         
         // Update points range based on fetched rewards
@@ -82,11 +86,11 @@ export default function Home() {
       return 'black-diamond'
     }
     // Diamond: Rolex, high-end watches - 75k-200k points
-    if (points >= 75000 || itemName.toLowerCase().includes('rolex') || itemName.toLowerCase().includes('watch')) {
+    if (points >= 75000 || itemName.toLowerCase().includes('rolex')) {
       return 'diamond'
     }
-    // Gold: iPhone, MacBook - 25k-75k points
-    if (points >= 25000 || itemName.toLowerCase().includes('iphone') || itemName.toLowerCase().includes('macbook')) {
+    // Gold: iPhone, MacBook, iPad - 25k-75k points
+    if (points >= 25000 || itemName.toLowerCase().includes('iphone') || itemName.toLowerCase().includes('macbook') || itemName.toLowerCase().includes('ipad')) {
       return 'gold'
     }
     // Silver: Mid-range gadgets, GCash - 500-25k points
@@ -136,16 +140,16 @@ export default function Home() {
     switch (tier) {
       case 'black-diamond':
         return {
-          borderColor: '#a78bfa',
+          borderColor: '#c084fc',
           animation: 'blackDiamondGlow 2s ease-in-out infinite',
           className: 'tier-black-diamond',
           textColor: 'text-white',
-          pointsColor: 'text-yellow-400',
-          buttonBg: 'bg-[#1e3a8a] hover:bg-[#1e3a8a]/80 text-white font-bold uppercase tracking-wider shadow-lg border-2 border-blue-300',
-          tierLabel: 'BLACK DIAMOND',
-          tierLabelBg: 'bg-gradient-to-r from-purple-900 to-black',
-          cardBg: 'bg-gradient-to-b from-[#05054F] to-[#32318F]', // Black Diamond gradient background
-          imageOverlay: 'bg-gradient-to-br from-transparent via-purple-900/20 to-blue-900/30' // Cosmic overlay
+          pointsColor: 'text-yellow-300',
+          buttonBg: 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 hover:from-purple-500 hover:via-pink-500 hover:to-purple-600 text-white font-bold uppercase tracking-wider shadow-2xl border-2 border-pink-400',
+          tierLabel: '💎 BLACK DIAMOND',
+          tierLabelBg: 'bg-gradient-to-r from-purple-900 via-pink-900 to-black',
+          cardBg: 'bg-gradient-to-br from-[#1a0033] via-[#4a0e4e] to-[#0a001a]', // Deep purple/black cosmic gradient
+          imageOverlay: 'bg-gradient-to-br from-purple-600/30 via-pink-500/20 to-violet-600/30' // Vibrant cosmic overlay
         }
       case 'diamond':
         return {
@@ -679,6 +683,26 @@ export default function Home() {
             
             return (
             <div key={item.id} className={`relative hover:scale-105 transition-all duration-200 h-full group ${(isLowStock || isLastOne) ? 'z-10 hover:z-30' : 'z-0 hover:z-30'} ${isOutOfStock ? 'cursor-not-allowed' : ''}`} style={{ overflow: 'visible' }}>
+              {/* Black Diamond Floating Particles */}
+              {tier === 'black-diamond' && (
+                <>
+                  <div className="absolute -top-2 -left-2 w-3 h-3 rounded-full bg-purple-400 blur-sm opacity-70 pointer-events-none" style={{ animation: 'blackDiamondFloat 4s ease-in-out infinite' }}></div>
+                  <div className="absolute -top-3 right-8 w-2 h-2 rounded-full bg-pink-400 blur-sm opacity-80 pointer-events-none" style={{ animation: 'blackDiamondFloat 3s ease-in-out infinite 0.5s' }}></div>
+                  <div className="absolute top-10 -right-2 w-3 h-3 rounded-full bg-violet-400 blur-sm opacity-60 pointer-events-none" style={{ animation: 'blackDiamondFloat 5s ease-in-out infinite 1s' }}></div>
+                  <div className="absolute bottom-20 -left-3 w-2 h-2 rounded-full bg-purple-300 blur-sm opacity-70 pointer-events-none" style={{ animation: 'blackDiamondFloat 4.5s ease-in-out infinite 1.5s' }}></div>
+                  <div className="absolute bottom-10 -right-1 w-2 h-2 rounded-full bg-pink-300 blur-sm opacity-80 pointer-events-none" style={{ animation: 'blackDiamondFloat 3.5s ease-in-out infinite 2s' }}></div>
+                  
+                  {/* Twinkling Stars */}
+                  <div className="absolute -top-1 left-10 text-yellow-300 text-xs pointer-events-none" style={{ animation: 'blackDiamondTwinkle 2s ease-in-out infinite' }}>✨</div>
+                  <div className="absolute top-8 -left-2 text-pink-300 text-sm pointer-events-none" style={{ animation: 'blackDiamondTwinkle2 3s ease-in-out infinite' }}>⭐</div>
+                  <div className="absolute top-20 right-5 text-purple-300 text-xs pointer-events-none" style={{ animation: 'blackDiamondTwinkle 2.5s ease-in-out infinite 0.8s' }}>✨</div>
+                  <div className="absolute top-32 -right-3 text-violet-300 text-sm pointer-events-none" style={{ animation: 'blackDiamondTwinkle3 4s ease-in-out infinite' }}>⭐</div>
+                  <div className="absolute bottom-32 left-2 text-fuchsia-300 text-xs pointer-events-none" style={{ animation: 'blackDiamondTwinkle2 3.5s ease-in-out infinite 1s' }}>✨</div>
+                  <div className="absolute bottom-16 -right-2 text-pink-200 text-sm pointer-events-none" style={{ animation: 'blackDiamondTwinkle 2.8s ease-in-out infinite 1.5s' }}>⭐</div>
+                  <div className="absolute bottom-5 left-8 text-purple-200 text-xs pointer-events-none" style={{ animation: 'blackDiamondTwinkle3 3.2s ease-in-out infinite 0.5s' }}>✨</div>
+                  <div className="absolute top-5 right-20 text-yellow-200 text-xs pointer-events-none" style={{ animation: 'blackDiamondTwinkle2 2.3s ease-in-out infinite 2s' }}>⭐</div>
+                </>
+              )}
               {/* Low Stock Banner (2-10 items) - Plain overlay */}
               {isLowStock && (
                       <div className="absolute top-0 -right-7 bg-orange-500 text-white text-center py-1 px-3 rounded-xl font-bold text-xs shadow-lg z-10 group-hover:z-50 pointer-events-none select-none"
@@ -710,7 +734,7 @@ export default function Home() {
                   isLastOne 
                     ? 'border-red-500' 
                     : ''
-                } ${tier === 'black-diamond' ? 'bg-gradient-to-b from-[#05054F] to-[#32318F]' : tier === 'diamond' ? 'bg-gradient-to-b from-[#2D1E44] to-[#67219D]' : tier === 'gold' ? 'bg-gradient-to-b from-[#FCDB6A] to-[#A66F08]' : tier === 'silver' ? 'bg-gradient-to-b from-[#E9E9EB] to-[#494A4E]' : tier === 'bronze' ? 'bg-gradient-to-b from-[#C97D03] to-[#2B1807]' : 'bg-white'}`} 
+                } ${tier === 'black-diamond' ? 'bg-gradient-to-br from-[#1a0033] via-[#4a0e4e] to-[#0a001a]' : tier === 'diamond' ? 'bg-gradient-to-b from-[#2D1E44] to-[#67219D]' : tier === 'gold' ? 'bg-gradient-to-b from-[#FCDB6A] to-[#A66F08]' : tier === 'silver' ? 'bg-gradient-to-b from-[#E9E9EB] to-[#494A4E]' : tier === 'bronze' ? 'bg-gradient-to-b from-[#C97D03] to-[#2B1807]' : 'bg-white'}`} 
                 style={{
                   width: '295px',
                   height: '439px',
@@ -732,11 +756,23 @@ export default function Home() {
                 <img 
                   src={(item as any).image || `https://via.placeholder.com/295x300/333333/FFFFFF?text=${encodeURIComponent(item.name)}`}
                   alt={item.name}
-                  className="w-full h-full object-cover rounded-[10px]"
+                  className={`w-full h-full object-cover rounded-[10px] ${tier === 'black-diamond' ? 'animate-blackDiamondSparkle' : ''}`}
+                  style={tier === 'black-diamond' ? { animation: 'blackDiamondSparkle 3s ease-in-out infinite' } : {}}
                 />
                 {/* Cosmic overlay for premium tiers */}
                 {(tier === 'black-diamond' || tier === 'diamond' || tier === 'gold' || tier === 'silver' || tier === 'bronze') && (
                   <div className={`absolute inset-0 ${tierStyles.imageOverlay} rounded-[10px] pointer-events-none`}></div>
+                )}
+                {/* Black Diamond Shimmer Effect */}
+                {tier === 'black-diamond' && (
+                  <div 
+                    className="absolute inset-0 rounded-[10px] pointer-events-none opacity-30"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(236, 72, 153, 0.6) 50%, transparent 100%)',
+                      backgroundSize: '200% 100%',
+                      animation: 'blackDiamondShimmer 3s linear infinite'
+                    }}
+                  ></div>
                 )}
               </div>
               
@@ -891,9 +927,12 @@ export default function Home() {
                   
                   try {
                     const response = await fetch(`/api/claims?claimId=${checkClaimId}`);
-                    const data = await response.json();
+                    const result = await response.json();
                     
-                    if (response.ok) {
+                    if (response.ok && result.success) {
+                      // Handle new API response format
+                      const data = result.data;
+                      
                       // Capitalize first letter for display
                       const displayStatus = data.status.charAt(0).toUpperCase() + data.status.slice(1);
                       
@@ -924,7 +963,7 @@ export default function Home() {
                       setClaimStatus({
                         status: 'Not Found',
                         color: 'red',
-                        message: data.error || 'Claim not found. Please check your Request ID.'
+                        message: result.error || 'Claim not found. Please check your Request ID.'
                       });
                     }
                   } catch (error) {
@@ -1242,7 +1281,7 @@ export default function Home() {
                       setClaimId(data.claimId);
                       setShowSuccessModal(true);
                     } else {
-                      alert('Error submitting claim: ' + data.error);
+                      alert('Error submitting claim: ' + (result.error || 'An error occurred'));
                     }
                   } catch (error) {
                     console.error('Error submitting claim:', error);
