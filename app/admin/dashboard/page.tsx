@@ -550,7 +550,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="bg-[#23272f] border-b border-yellow-700 px-8 py-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <img src={`${basePath}/time2bet-logo.svg`} alt="Time2Bet Logo" width={150} height={30} />
+          <img src="/Time2Claim.png" alt="Time2Claim Logo" className="w-[140px]" />
           <span className="text-yellow-400 font-bold text-xl">Admin Dashboard</span>
         </div>
         <button
