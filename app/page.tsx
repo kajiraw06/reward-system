@@ -57,11 +57,15 @@ export default function Home() {
     const fetchRewards = async () => {
       try {
         const response = await fetch('/api/rewards')
-        const data = await response.json()
-        setRewards(data)
+        const result = await response.json()
+        
+        // Handle new API response format with success/data structure
+        const data = result.success ? result.data : result
+        
+        setRewards(Array.isArray(data) ? data : [])
         
         // Update points range based on fetched rewards
-        if (data.length > 0) {
+        if (data && data.length > 0) {
           const points = data.map((r: any) => r.points)
           MIN_POINTS = Math.min(...points)
           MAX_POINTS = Math.max(...points)
@@ -71,6 +75,7 @@ export default function Home() {
         setLoading(false)
       } catch (error) {
         console.error('Error fetching rewards:', error)
+        setRewards([])
         setLoading(false)
       }
     }
@@ -698,8 +703,16 @@ export default function Home() {
               </div>
             </div>
           ) : (
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 w-full max-w-7xl px-1 overflow-visible pt-8">
-          {paginatedRewards.map((item) => {
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentPage}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 w-full max-w-7xl px-1 overflow-visible pt-8"
+            >
+          {paginatedRewards.map((item, index) => {
             const availableStock = item.quantity || 0
             const isLowStock = availableStock <= 10 && availableStock >= 2
             const isLastOne = availableStock === 1
@@ -709,7 +722,18 @@ export default function Home() {
             const tierStyles = getTierStyles(tier)
             
             return (
-            <div key={item.id} className={`relative hover:scale-105 transition-all duration-200 h-full group ${(isLowStock || isLastOne) ? 'z-10 hover:z-30' : 'z-0 hover:z-30'} ${isOutOfStock ? 'cursor-not-allowed' : ''}`} style={{ overflow: 'visible' }}>
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ 
+                duration: 0.3,
+                delay: index * 0.05,
+                ease: "easeOut"
+              }}
+              className={`relative hover:scale-105 transition-all duration-200 h-full group ${(isLowStock || isLastOne) ? 'z-10 hover:z-30' : 'z-0 hover:z-30'} ${isOutOfStock ? 'cursor-not-allowed' : ''}`}
+              style={{ overflow: 'visible' }}
+            >
               {/* Low Stock Banner (2-10 items) - Plain overlay */}
               {isLowStock && (
                       <div className="absolute top-0 -right-7 text-white text-center py-1 px-3 rounded-xl font-bold text-xs shadow-lg z-10 group-hover:z-50 pointer-events-none select-none"
@@ -825,10 +849,11 @@ export default function Home() {
               </div>
               </div>
               </div>
-            </div>
+            </motion.div>
             )
           })}
-        </div>
+            </motion.div>
+          </AnimatePresence>
           )}
         
         {/* Pagination Controls */}
