@@ -330,92 +330,227 @@ export default function Home() {
         />
       </div>
 
-      {/* 3D Carousel with 5 Cards - Enhanced with Framer Motion */}
+      {/* 3D Carousel with 5 Cards - SUPER ENHANCED VERSION */}
       {sortedRewards.length > 0 && (
-        <div className="w-full py-12 overflow-hidden relative z-10">
-          <div className="relative h-[480px] flex items-center justify-center">
+        <div className="w-full py-16 overflow-hidden relative z-10">
+          {/* Background glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-900/10 to-transparent pointer-events-none" />
+          
+          {/* Carousel Title */}
+          <motion.h2 
+            className="text-center text-4xl font-bold mb-8 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            Featured Rewards
+          </motion.h2>
+          
+          <div className="relative h-[500px] flex items-center justify-center">
+            {/* Center spotlight effect */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-80 h-[500px] bg-gradient-radial from-blue-500/20 via-purple-500/10 to-transparent blur-3xl" />
+            </div>
+            
             <AnimatePresence mode="popLayout">
               {[...Array(5)].map((_, i) => {
                 const index = (currentSlide + i) % sortedRewards.length
                 const reward = sortedRewards[index]
-                const position = i - 2 // -2, -1, 0, 1, 2 (left2, left1, center, right1, right2)
+                const position = i - 2 // -2, -1, 0, 1, 2
                 const isCenter = position === 0
+                const tier = getTier(reward.points, reward.name)
                 
-                // Calculate transform values
-                const translateX = position * 280 // Horizontal spacing
-                const scale = isCenter ? 1 : 0.75 // Center card is larger
-                const opacity = isCenter ? 1 : 0.5 // Center card is fully visible
-                const zIndex = isCenter ? 20 : 10 - Math.abs(position)
-                const rotateY = position * 15 // Add 3D rotation effect
+                // Enhanced transform values
+                const translateX = position * 320
+                const translateZ = isCenter ? 50 : -100
+                const scale = isCenter ? 1.1 : 0.7
+                const opacity = isCenter ? 1 : Math.max(0.3, 0.7 - Math.abs(position) * 0.2)
+                const zIndex = isCenter ? 30 : 20 - Math.abs(position) * 5
+                const rotateY = position * 25
+                const blur = isCenter ? 0 : Math.abs(position) * 2
+                
+                // Tier-based colors
+                const tierColors = {
+                  'black-diamond': { from: '#9333ea', to: '#ec4899', glow: 'rgba(147, 51, 234, 0.4)' },
+                  'diamond': { from: '#8b5cf6', to: '#a78bfa', glow: 'rgba(139, 92, 246, 0.4)' },
+                  'gold': { from: '#fbbf24', to: '#f59e0b', glow: 'rgba(251, 191, 36, 0.4)' },
+                  'silver': { from: '#d1d5db', to: '#9ca3af', glow: 'rgba(209, 213, 219, 0.4)' },
+                  'bronze': { from: '#d97706', to: '#92400e', glow: 'rgba(217, 119, 6, 0.4)' }
+                }
+                
+                const colors = tierColors[tier as keyof typeof tierColors] || tierColors.silver
                 
                 return (
                   <motion.div
                     key={`${reward.id}-${currentSlide}-${i}`}
                     className="absolute cursor-pointer"
                     initial={{ 
-                      x: translateX + 100, 
-                      scale: scale * 0.8, 
+                      x: translateX + 150, 
+                      scale: scale * 0.5, 
                       opacity: 0,
-                      rotateY: rotateY + 20
+                      rotateY: rotateY + 30,
+                      z: translateZ - 50
                     }}
                     animate={{ 
                       x: translateX, 
                       scale: scale, 
                       opacity: opacity,
                       rotateY: rotateY,
-                      zIndex: zIndex
+                      z: translateZ,
+                      zIndex: zIndex,
+                      filter: `blur(${blur}px)`
                     }}
                     exit={{ 
-                      x: translateX - 100, 
-                      scale: scale * 0.8, 
+                      x: translateX - 150, 
+                      scale: scale * 0.5, 
                       opacity: 0,
-                      rotateY: rotateY - 20
+                      rotateY: rotateY - 30,
+                      z: translateZ - 50
                     }}
                     transition={{
-                      duration: 0.6,
-                      ease: [0.32, 0.72, 0, 1], // Custom easing for smooth motion
-                      scale: { duration: 0.4 },
-                      opacity: { duration: 0.3 }
+                      duration: 0.8,
+                      ease: [0.25, 0.1, 0.25, 1],
+                      scale: { duration: 0.5 },
+                      opacity: { duration: 0.4 }
                     }}
                     whileHover={isCenter ? { 
-                      scale: 1.05,
+                      scale: 1.15,
                       rotateY: 0,
+                      y: -10,
                       transition: { duration: 0.3 }
                     } : {}}
                     onClick={() => isCenter && setSelectedReward(reward)}
                     style={{
                       zIndex: zIndex,
-                      perspective: 1000,
+                      perspective: 1500,
+                      transformStyle: 'preserve-3d',
                     }}
                   >
                     <motion.div 
-                      className="w-64 h-96 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-700 to-gray-800 border-2 border-blue-400"
+                      className="w-72 h-[450px] rounded-3xl overflow-hidden shadow-2xl relative"
                       style={{
                         transformStyle: 'preserve-3d',
+                        background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
+                        boxShadow: isCenter 
+                          ? `0 25px 60px ${colors.glow}, 0 0 50px ${colors.glow}`
+                          : `0 15px 35px rgba(0,0,0,0.3)`,
                       }}
+                      animate={isCenter ? {
+                        boxShadow: [
+                          `0 25px 60px ${colors.glow}, 0 0 50px ${colors.glow}`,
+                          `0 30px 70px ${colors.glow}, 0 0 60px ${colors.glow}`,
+                          `0 25px 60px ${colors.glow}, 0 0 50px ${colors.glow}`,
+                        ]
+                      } : {}}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      <div className="h-[75%] relative bg-gray-600">
-                        <img
+                      {/* Animated border */}
+                      {isCenter && (
+                        <motion.div 
+                          className="absolute inset-0 rounded-3xl"
+                          style={{
+                            background: `linear-gradient(45deg, ${colors.from}, transparent, ${colors.to})`,
+                            backgroundSize: '200% 200%',
+                          }}
+                          animate={{
+                            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                          }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        />
+                      )}
+                      
+                      {/* Image section */}
+                      <div className="h-[70%] relative overflow-hidden">
+                        <motion.img
                           src={reward.image_url || reward.image || '/placeholder.png'}
                           alt={reward.name}
                           className="w-full h-full object-cover"
+                          animate={isCenter ? {
+                            scale: [1, 1.05, 1],
+                          } : {}}
+                          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                         />
+                        
+                        {/* Shine effect on center card */}
                         {isCenter && (
                           <motion.div 
-                            className="absolute inset-0 bg-gradient-to-t from-blue-600/30 to-transparent"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
+                            className="absolute inset-0"
+                            style={{
+                              background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%)',
+                              backgroundSize: '200% 100%',
+                            }}
+                            animate={{
+                              backgroundPosition: ['200% 0', '-200% 0'],
+                            }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                           />
                         )}
+                        
+                        {/* Tier badge */}
+                        <motion.div 
+                          className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md"
+                          style={{
+                            background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
+                            color: tier === 'gold' || tier === 'silver' ? '#000' : '#fff'
+                          }}
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ delay: 0.3, type: "spring" }}
+                        >
+                          {tier === 'black-diamond' ? 'BLACK DIAMOND' : 
+                           tier === 'diamond' ? 'DIAMOND' :
+                           tier === 'gold' ? 'GOLD' :
+                           tier === 'silver' ? 'SILVER' : 'BRONZE'}
+                        </motion.div>
+                        
+                        {/* Gradient overlay */}
+                        <div 
+                          className="absolute inset-0"
+                          style={{
+                            background: `linear-gradient(to bottom, transparent 50%, ${colors.from}E6 100%)`
+                          }}
+                        />
                       </div>
-                      <div className="h-[25%] bg-gradient-to-br from-[#0066cc] to-[#0044aa] p-4 flex flex-col justify-center">
-                        <h3 className="text-white font-bold text-base truncate">{reward.name}</h3>
-                        <p className="text-yellow-300 text-sm flex items-center gap-1 mt-1">
-                          <img src="/Pts 1.png" alt="Points" className="w-4 h-4" />
-                          {reward.points.toLocaleString()} Pts
-                        </p>
+                      
+                      {/* Info section */}
+                      <div className="h-[30%] p-5 flex flex-col justify-between relative z-10">
+                        <div>
+                          <motion.h3 
+                            className="text-white font-bold text-xl mb-2 line-clamp-2"
+                            animate={isCenter ? { y: [0, -2, 0] } : {}}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            {reward.name}
+                          </motion.h3>
+                          <div className="flex items-center gap-2">
+                            <motion.img 
+                              src="/Pts 1.png" 
+                              alt="Points" 
+                              className="w-6 h-6"
+                              animate={isCenter ? { rotate: [0, 360] } : {}}
+                              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            />
+                            <span className="text-yellow-300 font-bold text-lg">
+                              {reward.points.toLocaleString()} Pts
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Center card gets a button */}
+                        {isCenter && (
+                          <motion.button
+                            className="w-full py-1.5 bg-white text-black font-bold rounded-lg hover:bg-yellow-300 transition-colors text-sm"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                          >
+                            CLAIM NOW
+                          </motion.button>
+                        )}
                       </div>
+                      
                     </motion.div>
                   </motion.div>
                 )
