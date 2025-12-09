@@ -400,16 +400,24 @@ export default function Home() {
                 <motion.div
                 key={item.id}
                 className="absolute"
-                initial={false}
+                initial={{ 
+                  scale: 0.5,
+                  opacity: 0,
+                  y: 50,
+                  rotateY: -30
+                }}
                 animate={{
                   scale,
                   x: translateX,
                   opacity,
                   zIndex,
+                  y: 0,
+                  rotateY: 0
                 }}
                 transition={{
-                  duration: 0.5,
-                  ease: "easeInOut"
+                  duration: 1.2,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  delay: idx * 0.08
                 }}
                 style={{ width: '280px', willChange: adjustedPos >= -1 && adjustedPos <= 1 ? 'transform, opacity' : 'auto' }}
               >
