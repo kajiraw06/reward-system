@@ -37,6 +37,9 @@ export async function GET(request: NextRequest) {
       category: reward.category,
       quantity: reward.quantity,
       tier: reward.tier || 'bronze',
+      is_active: reward.is_active !== undefined ? reward.is_active : true,
+      low_stock_threshold: reward.low_stock_threshold || 5,
+      last_restocked_at: reward.last_restocked_at,
       variants: {
         type: reward.variant_type || 'color',
         options: reward.variants?.map((v: any) => v.option_name) || []

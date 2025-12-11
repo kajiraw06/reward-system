@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import InventoryManagement from './InventoryManagement'
 
 const basePath = process.env.NODE_ENV === 'production' ? '/reward-system' : ''
 
@@ -9,6 +10,7 @@ export default function AdminDashboard() {
   const router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showManageRewards, setShowManageRewards] = useState(false)
+  const [showInventoryManagement, setShowInventoryManagement] = useState(false)
   const [rewardsList, setRewardsList] = useState<any[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValues, setEditValues] = useState({ name: '', points: '', category: '', quantity: '', variantType: '', variantOptions: '', galleries: {} as Record<string, string[]> })
@@ -566,14 +568,26 @@ export default function AdminDashboard() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-extrabold text-yellow-400">Welcome to Admin Panel</h1>
           
-          <div className="bg-[#23272f] rounded-lg px-6 py-4 border-2 border-yellow-700 flex items-center gap-6">
-            <div>
-              <h3 className="text-yellow-400 font-semibold text-sm mb-1">Total Rewards</h3>
-              <p className="text-3xl font-bold">{rewardsList.length}</p>
+          <div className="flex gap-4">
+            <div className="bg-[#23272f] rounded-lg px-6 py-4 border-2 border-yellow-700 flex items-center gap-6">
+              <div>
+                <h3 className="text-yellow-400 font-semibold text-sm mb-1">Total Rewards</h3>
+                <p className="text-3xl font-bold">{rewardsList.length}</p>
+              </div>
+              <button className="bg-yellow-700 hover:bg-yellow-600 text-yellow-100 px-6 py-3 rounded-lg font-bold transition whitespace-nowrap" onClick={() => setShowManageRewards(true)}>
+                Manage Rewards
+              </button>
             </div>
-            <button className="bg-yellow-700 hover:bg-yellow-600 text-yellow-100 px-6 py-3 rounded-lg font-bold transition whitespace-nowrap" onClick={() => setShowManageRewards(true)}>
-              Manage Rewards
-            </button>
+            
+            <div className="bg-[#23272f] rounded-lg px-6 py-4 border-2 border-yellow-700 flex items-center gap-6">
+              <div>
+                <h3 className="text-yellow-400 font-semibold text-sm mb-1">Inventory</h3>
+                <p className="text-xl font-bold">Stock Control</p>
+              </div>
+              <button className="bg-yellow-700 hover:bg-yellow-600 text-yellow-100 px-6 py-3 rounded-lg font-bold transition whitespace-nowrap" onClick={() => setShowInventoryManagement(true)}>
+                Manage Inventory
+              </button>
+            </div>
           </div>
         </div>
         
@@ -802,6 +816,15 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Inventory Management Modal */}
+      {showInventoryManagement && (
+        <InventoryManagement
+          onClose={() => setShowInventoryManagement(false)}
+          rewards={rewardsList}
+          onRefresh={fetchRewards}
+        />
       )}
 
       {/* New Reward Form Modal */}
